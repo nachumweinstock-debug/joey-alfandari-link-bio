@@ -1,12 +1,8 @@
-import { useEffect, useState } from "react";
 import {
   ArrowUpRight,
-  Check,
-  Clapperboard,
   Flame,
   Instagram,
   Mail,
-  Play,
   Sparkles,
 } from "lucide-react";
 
@@ -23,68 +19,24 @@ const bioParagraphs = [
   "Let's create content that feels real, sparks emotion, and inspires people to become stronger versions of themselves.",
 ];
 
-// SWAP THESE: Paste YouTube/Vimeo/TikTok embed URLs for videos Joey has worked on.
-const videos = [
-  {
-    title: "Motivation Reel",
-    role: "Story, performance, creative direction",
-    embedUrl: "",
-  },
-  {
-    title: "Mindset Short",
-    role: "Concept, script, on-camera talent",
-    embedUrl: "",
-  },
-];
-
 // SWAP THESE: Replace href values with Joey's actual links.
 const links = [
   {
     label: "Instagram",
     href: "https://www.instagram.com/brave_spark_/",
     icon: Instagram,
-    note: "Instagram is ready for Brave Spark.",
-  },
-  {
-    label: "Video Work",
-    href: "#videos",
-    icon: Clapperboard,
-    note: "Jumped to Brave Spark's featured video work.",
   },
   {
     label: "Contact",
     href: "mailto:Bravesparkinsta@gmail.com",
     icon: Mail,
-    note: "Email copied. Reach Brave Spark directly for content, collabs, and bookings.",
   },
 ];
 
 function LinkCard({ href, icon: Icon, label }) {
-  const [copied, setCopied] = useState(false);
-
-  function handleClick() {
-    if (href.startsWith("#")) {
-      document.querySelector(href)?.scrollIntoView({ behavior: "smooth" });
-    }
-
-    window.dispatchEvent(
-      new CustomEvent("joey-link-selected", {
-        detail: { label, href },
-      })
-    );
-
-    if (navigator.clipboard && href && !href.startsWith("#")) {
-      navigator.clipboard.writeText(href).then(() => {
-        setCopied(true);
-        window.setTimeout(() => setCopied(false), 1400);
-      });
-    }
-  }
-
   return (
-    <button
-      type="button"
-      onClick={handleClick}
+    <a
+      href={href}
       className="group flex min-h-[70px] items-center justify-between rounded-[8px] border border-neutral-900/15 bg-white/75 px-5 py-4 text-left shadow-[0_12px_35px_rgba(23,23,23,0.06)] backdrop-blur transition duration-300 hover:-translate-y-1 hover:border-neutral-950 hover:bg-white hover:shadow-[0_18px_45px_rgba(23,23,23,0.12)] focus:outline-none focus:ring-4 focus:ring-yellow-500/30"
     >
       <span className="flex items-center gap-4">
@@ -95,69 +47,16 @@ function LinkCard({ href, icon: Icon, label }) {
           {label}
         </span>
       </span>
-      {copied ? (
-        <Check size={22} className="text-yellow-700" />
-      ) : (
-        <ArrowUpRight
-          size={22}
-          className="text-neutral-950 transition duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-yellow-700"
-        />
-      )}
-    </button>
-  );
-}
-
-function VideoCard({ embedUrl, role, title }) {
-  return (
-    <article className="group">
-      <div className="mx-auto w-full max-w-[280px] rounded-[42px] bg-neutral-950 p-3 shadow-[0_28px_70px_rgba(23,23,23,0.22)] transition duration-300 group-hover:-translate-y-2 group-hover:shadow-[0_34px_90px_rgba(245,183,0,0.28)]">
-        <div className="relative overflow-hidden rounded-[32px] bg-neutral-900">
-          <div className="absolute left-1/2 top-0 z-10 h-6 w-28 -translate-x-1/2 rounded-b-2xl bg-neutral-950" />
-          <div className="aspect-[9/16]">
-            {embedUrl ? (
-              <iframe
-                src={embedUrl}
-                title={title}
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                allowFullScreen
-                className="h-full w-full"
-              />
-            ) : (
-              <div className="flex h-full items-center justify-center bg-[radial-gradient(circle_at_28%_20%,#ffe66d_0%,#f5b700_28%,#171717_72%)] text-neutral-950">
-                <div className="flex size-20 items-center justify-center rounded-full bg-white/90 shadow-[0_18px_45px_rgba(0,0,0,0.28)]">
-                  <Play size={34} fill="currentColor" />
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-      <div className="mx-auto mt-5 max-w-[280px]">
-        <h3 className="text-xl font-black tracking-normal text-neutral-950">
-          {title}
-        </h3>
-        <p className="mt-2 text-sm font-semibold leading-6 text-neutral-700">
-          {role}
-        </p>
-      </div>
-    </article>
+      <ArrowUpRight
+        size={22}
+        className="text-neutral-950 transition duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-yellow-700"
+      />
+    </a>
   );
 }
 
 export default function App() {
   const year = new Date().getFullYear();
-  const [selectedLink, setSelectedLink] = useState(links[0]);
-  const [photoReady, setPhotoReady] = useState(Boolean(profilePhotoUrl));
-
-  useEffect(() => {
-    function handleSelected(event) {
-      const match = links.find((link) => link.label === event.detail.label);
-      if (match) setSelectedLink(match);
-    }
-
-    window.addEventListener("joey-link-selected", handleSelected);
-    return () => window.removeEventListener("joey-link-selected", handleSelected);
-  }, []);
 
   return (
     <main className="min-h-screen overflow-hidden bg-[#fff8df] text-neutral-950">
@@ -180,7 +79,7 @@ export default function App() {
               Motivation, mindset, and real-life growth with a human punch.
             </p>
 
-            <div className="mx-auto mt-8 grid max-w-xl gap-3 sm:grid-cols-3 lg:mx-0">
+            <div className="mx-auto mt-8 grid max-w-md gap-3 sm:grid-cols-2 lg:mx-0">
               {links.map((link) => (
                 <LinkCard key={link.label} {...link} />
               ))}
@@ -193,11 +92,10 @@ export default function App() {
                 <Flame size={28} fill="currentColor" />
               </div>
 
-              {profilePhotoUrl && photoReady ? (
+              {profilePhotoUrl ? (
                 <img
                   src={profilePhotoUrl}
                   alt="Brave Spark"
-                  onError={() => setPhotoReady(false)}
                   className="aspect-[1596/656] h-auto w-full rounded-[20px] object-contain"
                 />
               ) : (
@@ -216,7 +114,7 @@ export default function App() {
       </section>
 
       <section className="px-5 pb-20 sm:px-8 lg:px-10">
-        <div className="mx-auto grid max-w-5xl gap-8 lg:grid-cols-[0.85fr_1.15fr]">
+        <div className="mx-auto max-w-3xl">
           <article className="animate-rise-in rounded-[8px] border border-neutral-950/15 bg-white/70 p-6 shadow-[0_14px_45px_rgba(23,23,23,0.07)] [animation-delay:220ms] sm:p-8">
             <p className="mb-4 text-sm font-black uppercase tracking-[0.18em] text-yellow-700">
               About
@@ -227,40 +125,6 @@ export default function App() {
               ))}
             </div>
           </article>
-
-          <div className="animate-rise-in [animation-delay:320ms]">
-            <div className="rounded-[8px] border border-yellow-700/25 bg-yellow-400/20 p-5 text-sm font-semibold leading-6 text-neutral-800">
-              <p className="mb-3 text-sm font-black uppercase tracking-[0.18em] text-yellow-800">
-                Quick Action
-              </p>
-              <span className="text-yellow-800">{selectedLink.label}:</span>{" "}
-              {selectedLink.note}
-              <div className="mt-2 break-all font-mono text-xs font-medium text-neutral-600">
-                {selectedLink.href}
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section id="videos" className="bg-[#f5b700] px-5 py-20 sm:px-8 lg:px-10">
-        <div className="mx-auto max-w-5xl">
-          <div className="mb-10 flex items-end justify-between gap-4">
-            <div>
-              <p className="mb-3 text-sm font-black uppercase tracking-[0.18em] text-neutral-950/70">
-                Video Work
-              </p>
-              <h2 className="max-w-2xl text-5xl font-black leading-none tracking-normal text-neutral-950 sm:text-6xl">
-                Vertical work should look loud.
-              </h2>
-            </div>
-          </div>
-
-          <div className="grid gap-10 md:grid-cols-2">
-            {videos.map((video) => (
-              <VideoCard key={video.title} {...video} />
-            ))}
-          </div>
         </div>
       </section>
 
