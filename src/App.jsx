@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
 import {
   ArrowUpRight,
-  BriefcaseBusiness,
   Check,
+  Clapperboard,
   Flame,
   Instagram,
   Mail,
+  Play,
   Sparkles,
 } from "lucide-react";
 
@@ -15,8 +16,26 @@ const accent = "#f5b700";
 const profilePhotoUrl = "/joey-profile.jpg";
 
 // SWAP THIS: Replace with Joey's real bio copy.
-const bioText =
-  "Hey! I'm Brave Spark, a 43-year-old content creator from New York, USA, focused on motivation, mindset, and real-life growth. I create content that goes beyond just inspiration, content that makes people feel seen, challenged, and understood. My approach blends storytelling, humor, vulnerability, and powerful messages to create videos that connect on a human level and leave a lasting impact. Whether it's through relatable moments, cinematic visuals, or honest conversations, my goal is simple: to remind people that being brave doesn't mean having it all together, it means showing up anyway. Let's create content that feels real, sparks emotion, and inspires people to become stronger versions of themselves.";
+const bioParagraphs = [
+  "Hey! I'm Brave Spark, a 43-year-old content creator from New York, USA, focused on motivation, mindset, and real-life growth.",
+  "I create content that goes beyond just inspiration, content that makes people feel seen, challenged, and understood. My approach blends storytelling, humor, vulnerability, and powerful messages to create videos that connect on a human level and leave a lasting impact.",
+  "Whether it's through relatable moments, cinematic visuals, or honest conversations, my goal is simple: to remind people that being brave doesn't mean having it all together, it means showing up anyway.",
+  "Let's create content that feels real, sparks emotion, and inspires people to become stronger versions of themselves.",
+];
+
+// SWAP THESE: Paste YouTube/Vimeo/TikTok embed URLs for videos Joey has worked on.
+const videos = [
+  {
+    title: "Motivation Reel",
+    role: "Story, performance, creative direction",
+    embedUrl: "",
+  },
+  {
+    title: "Mindset Short",
+    role: "Concept, script, on-camera talent",
+    embedUrl: "",
+  },
+];
 
 // SWAP THESE: Replace href values with Joey's actual links.
 const links = [
@@ -27,10 +46,10 @@ const links = [
     note: "Instagram is ready for Brave Spark.",
   },
   {
-    label: "Projects",
-    href: "#projects",
-    icon: BriefcaseBusiness,
-    note: "Featured work placeholder. Add Brave Spark's latest videos, campaigns, or collaborations here.",
+    label: "Video Work",
+    href: "#videos",
+    icon: Clapperboard,
+    note: "Jumped to Brave Spark's featured video work.",
   },
   {
     label: "Contact",
@@ -44,6 +63,10 @@ function LinkCard({ href, icon: Icon, label }) {
   const [copied, setCopied] = useState(false);
 
   function handleClick() {
+    if (href.startsWith("#")) {
+      document.querySelector(href)?.scrollIntoView({ behavior: "smooth" });
+    }
+
     window.dispatchEvent(
       new CustomEvent("joey-link-selected", {
         detail: { label, href },
@@ -84,6 +107,36 @@ function LinkCard({ href, icon: Icon, label }) {
   );
 }
 
+function VideoCard({ embedUrl, role, title }) {
+  return (
+    <article className="overflow-hidden rounded-[8px] border border-neutral-950/15 bg-white/70 shadow-[0_14px_45px_rgba(23,23,23,0.07)]">
+      <div className="aspect-video bg-neutral-950">
+        {embedUrl ? (
+          <iframe
+            src={embedUrl}
+            title={title}
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+            allowFullScreen
+            className="h-full w-full"
+          />
+        ) : (
+          <div className="flex h-full items-center justify-center bg-[linear-gradient(135deg,#171717_0%,#2d2d2d_58%,#f5b700_100%)] text-yellow-300">
+            <Play size={42} fill="currentColor" />
+          </div>
+        )}
+      </div>
+      <div className="p-5">
+        <h3 className="text-xl font-black tracking-normal text-neutral-950">
+          {title}
+        </h3>
+        <p className="mt-2 text-sm font-semibold leading-6 text-neutral-700">
+          {role}
+        </p>
+      </div>
+    </article>
+  );
+}
+
 export default function App() {
   const year = new Date().getFullYear();
   const [selectedLink, setSelectedLink] = useState(links[0]);
@@ -97,7 +150,7 @@ export default function App() {
 
     window.addEventListener("joey-link-selected", handleSelected);
     return () => window.removeEventListener("joey-link-selected", handleSelected);
-  });
+  }, []);
 
   return (
     <main className="min-h-screen overflow-hidden bg-[#fff8df] text-neutral-950">
@@ -105,7 +158,7 @@ export default function App() {
         <div className="pointer-events-none absolute left-0 top-0 h-40 w-40 -translate-x-1/2 -translate-y-1/2 rounded-full bg-yellow-400/25 blur-3xl" />
         <div className="pointer-events-none absolute bottom-12 right-0 h-48 w-48 translate-x-1/3 rounded-full bg-yellow-500/20 blur-3xl" />
 
-        <div className="mx-auto grid w-full max-w-5xl gap-10 lg:grid-cols-[1fr_340px] lg:items-center">
+        <div className="mx-auto grid w-full max-w-5xl gap-10 lg:grid-cols-[1fr_420px] lg:items-center">
           <div className="animate-rise-in text-center lg:text-left">
             <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-neutral-950/15 bg-white/55 px-4 py-2 text-sm font-semibold text-neutral-800 shadow-sm">
               <Sparkles size={16} color={accent} />
@@ -121,8 +174,8 @@ export default function App() {
             </p>
           </div>
 
-          <div className="animate-rise-in mx-auto w-full max-w-[300px] [animation-delay:120ms] lg:max-w-none">
-            <div className="relative aspect-square rounded-[32px] border border-neutral-950/15 bg-white p-3 shadow-[0_24px_70px_rgba(23,23,23,0.15)]">
+          <div className="animate-rise-in mx-auto w-full max-w-[420px] [animation-delay:120ms]">
+            <div className="relative aspect-[4/3] rounded-[32px] border border-neutral-950/15 bg-white p-3 shadow-[0_24px_70px_rgba(23,23,23,0.15)]">
               <div className="absolute -right-4 -top-4 flex size-16 items-center justify-center rounded-full bg-yellow-400 text-neutral-950 shadow-[0_16px_35px_rgba(245,183,0,0.35)]">
                 <Flame size={28} fill="currentColor" />
               </div>
@@ -132,7 +185,7 @@ export default function App() {
                   src={profilePhotoUrl}
                   alt="Joey Alfandari"
                   onError={() => setPhotoReady(false)}
-                  className="h-full w-full rounded-[24px] object-cover"
+                  className="h-full w-full rounded-[24px] object-cover object-center"
                 />
               ) : (
                 <div className="flex h-full w-full items-center justify-center rounded-[24px] bg-[linear-gradient(135deg,#171717_0%,#2b2b2b_48%,#f5b700_100%)] text-center">
@@ -155,9 +208,11 @@ export default function App() {
             <p className="mb-4 text-sm font-black uppercase tracking-[0.18em] text-yellow-700">
               About
             </p>
-            <p className="text-lg font-medium leading-8 text-neutral-800">
-              {bioText}
-            </p>
+            <div className="space-y-5 text-lg font-medium leading-8 text-neutral-800">
+              {bioParagraphs.map((paragraph) => (
+                <p key={paragraph}>{paragraph}</p>
+              ))}
+            </div>
           </article>
 
           <div className="animate-rise-in [animation-delay:320ms]">
@@ -178,6 +233,27 @@ export default function App() {
                 {selectedLink.href}
               </div>
             </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="videos" className="px-5 pb-20 sm:px-8 lg:px-10">
+        <div className="mx-auto max-w-5xl">
+          <div className="mb-6 flex items-end justify-between gap-4">
+            <div>
+              <p className="mb-3 text-sm font-black uppercase tracking-[0.18em] text-yellow-700">
+                Video Work
+              </p>
+              <h2 className="text-4xl font-black leading-none tracking-normal text-neutral-950 sm:text-5xl">
+                Built to embed clean.
+              </h2>
+            </div>
+          </div>
+
+          <div className="grid gap-5 md:grid-cols-2">
+            {videos.map((video) => (
+              <VideoCard key={video.title} {...video} />
+            ))}
           </div>
         </div>
       </section>
