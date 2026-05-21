@@ -1,8 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   ArrowUpRight,
   Clapperboard,
-  Flame,
   Instagram,
   Lock,
   Mail,
@@ -139,7 +138,20 @@ function LinkCard({ href, icon: Icon, label }) {
   );
 }
 
-function IPhoneVideo({ eyebrow, id, src, title }) {
+function IPhoneVideo({ eyebrow, src, title }) {
+  const videoRef = useRef(null);
+
+  function openFullscreen() {
+    const video = videoRef.current;
+    if (!video) return;
+
+    if (video.requestFullscreen) {
+      video.requestFullscreen();
+    } else if (video.webkitEnterFullscreen) {
+      video.webkitEnterFullscreen();
+    }
+  }
+
   return (
     <article className="group">
       <div className="mx-auto w-full max-w-[280px] rounded-[42px] bg-neutral-950 p-3 shadow-[0_30px_80px_rgba(23,23,23,0.28)] transition duration-300 group-hover:-translate-y-2">
@@ -147,13 +159,23 @@ function IPhoneVideo({ eyebrow, id, src, title }) {
           <div className="absolute left-1/2 top-0 z-20 h-6 w-28 -translate-x-1/2 rounded-b-2xl bg-neutral-950" />
           <div className="aspect-[9/16]">
             {src ? (
-              <video
-                src={src}
-                controls
-                playsInline
-                preload="metadata"
-                className="h-full w-full object-cover"
-              />
+              <div className="relative h-full bg-black">
+                <video
+                  ref={videoRef}
+                  src={src}
+                  controls
+                  playsInline
+                  preload="metadata"
+                  className="h-full w-full object-contain"
+                />
+                <button
+                  type="button"
+                  onClick={openFullscreen}
+                  className="absolute bottom-4 right-4 rounded-full bg-white px-4 py-2 text-xs font-black text-neutral-950 shadow-[0_14px_35px_rgba(0,0,0,0.3)] transition hover:-translate-y-0.5"
+                >
+                  Fullscreen
+                </button>
+              </div>
             ) : (
               <div className="flex h-full items-center justify-center bg-[radial-gradient(circle_at_30%_18%,#fff0a3_0%,#f5b700_28%,#161616_72%)] text-neutral-950">
                 <div className="flex size-20 items-center justify-center rounded-full bg-white/95 shadow-[0_18px_45px_rgba(0,0,0,0.3)]">
@@ -166,7 +188,7 @@ function IPhoneVideo({ eyebrow, id, src, title }) {
       </div>
       <div className="mx-auto mt-5 max-w-[280px]">
         <p className="text-xs font-black uppercase tracking-[0.18em] text-neutral-950/55">
-          Slot {id} · {eyebrow}
+          {eyebrow}
         </p>
         <h3 className="mt-2 text-2xl font-black leading-tight tracking-normal text-neutral-950">
           {title}
@@ -425,14 +447,10 @@ export default function App() {
 
         <div className="mx-auto grid min-h-[calc(100vh-80px)] w-full max-w-6xl content-center gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
           <div className="animate-rise-in text-center lg:text-left">
-            <button
-              type="button"
-              onClick={() => setAdminOpen(true)}
-              className="mb-6 inline-flex items-center gap-2 rounded-full border border-neutral-950/15 bg-white/55 px-4 py-2 text-sm font-semibold text-neutral-800 shadow-sm transition hover:-translate-y-0.5 hover:border-neutral-950"
-            >
+            <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-neutral-950/15 bg-white/55 px-4 py-2 text-sm font-semibold text-neutral-800 shadow-sm">
               <Sparkles size={16} color={accent} />
               <span>@brave_spark_</span>
-            </button>
+            </div>
 
             <h1 className="mx-auto max-w-4xl text-balance text-5xl font-black leading-[0.95] tracking-normal text-neutral-950 sm:text-6xl md:text-7xl lg:mx-0">
               Brave Spark
@@ -451,10 +469,6 @@ export default function App() {
 
           <div className="animate-rise-in mx-auto w-full [animation-delay:120ms]">
             <div className="relative rounded-[28px] border border-neutral-950/15 bg-white p-3 shadow-[0_24px_70px_rgba(23,23,23,0.15)]">
-              <div className="absolute -right-4 -top-4 z-10 flex size-16 items-center justify-center rounded-full bg-yellow-400 text-neutral-950 shadow-[0_16px_35px_rgba(245,183,0,0.35)]">
-                <Flame size={28} fill="currentColor" />
-              </div>
-
               {profilePhotoUrl ? (
                 <img
                   src={profilePhotoUrl}
@@ -493,7 +507,7 @@ export default function App() {
 
       <section className="bg-[#f5b700] px-5 py-20 sm:px-8 lg:px-10">
         <div className="mx-auto max-w-6xl">
-          <div className="mb-12 grid gap-6 lg:grid-cols-[0.85fr_1.15fr] lg:items-end">
+          <div className="mb-12">
             <div>
               <div className="mb-5 inline-flex items-center gap-2 rounded-full bg-neutral-950 px-4 py-2 text-sm font-black text-yellow-300 shadow-[0_18px_40px_rgba(23,23,23,0.22)]">
                 <Clapperboard size={17} />
@@ -502,20 +516,6 @@ export default function App() {
               <h2 className="max-w-3xl text-5xl font-black leading-none tracking-normal text-neutral-950 sm:text-6xl">
                 Built for vertical stories.
               </h2>
-            </div>
-
-            <div className="rounded-[8px] border border-neutral-950/20 bg-white/75 p-4 shadow-[0_18px_55px_rgba(23,23,23,0.12)]">
-              <button
-                type="button"
-                onClick={() => setAdminOpen(true)}
-                className="flex w-full items-center justify-between gap-4 rounded-[8px] bg-neutral-950 px-5 py-4 text-left font-black text-white transition duration-300 hover:-translate-y-0.5 hover:bg-neutral-800"
-              >
-                <span className="flex items-center gap-3">
-                  <Upload size={21} className="text-yellow-300" />
-                  <span>Manage Videos</span>
-                </span>
-                <ArrowUpRight size={21} className="text-yellow-300" />
-              </button>
             </div>
           </div>
 
@@ -528,7 +528,15 @@ export default function App() {
       </section>
 
       <footer className="px-5 pb-8 text-center text-sm font-semibold text-neutral-600 sm:px-8">
-        Brave Spark · {year} · <span aria-label="spark">🔥</span>
+        Brave Spark · {year} ·{" "}
+        <button
+          type="button"
+          onClick={() => setAdminOpen(true)}
+          className="inline-flex rounded-full px-1 transition hover:-translate-y-0.5 focus:outline-none focus:ring-4 focus:ring-yellow-500/30"
+          aria-label="Open video admin"
+        >
+          🔥
+        </button>
       </footer>
 
       {adminOpen ? (
