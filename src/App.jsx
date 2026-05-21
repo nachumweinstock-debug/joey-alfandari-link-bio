@@ -4,10 +4,13 @@ import {
   Clapperboard,
   Flame,
   Instagram,
+  Lock,
   Mail,
   Play,
+  Save,
   Sparkles,
   Upload,
+  X,
 } from "lucide-react";
 
 const accent = "#f5b700";
@@ -37,20 +40,82 @@ const links = [
   },
 ];
 
-// SWAP THESE: Add permanent vertical videos to public/videos and set src.
-// Example: src: "/videos/motivation-reel.mp4"
-const videoSlots = [
+const adminPassword = "3907";
+const dbName = "brave-spark-admin";
+const videoStore = "videos";
+
+const defaultVideoSlots = [
   {
+    id: 1,
+    eyebrow: "Intro Reel",
+    title: "Upload video one",
+    src: "",
+  },
+  {
+    id: 2,
     eyebrow: "Featured Reel",
     title: "Motivation that hits",
     src: "",
   },
   {
+    id: 3,
     eyebrow: "Story Clip",
     title: "Real talk, sharp cut",
     src: "",
   },
 ];
+
+function openVideoDb() {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open(dbName, 1);
+
+    request.onupgradeneeded = () => {
+      request.result.createObjectStore(videoStore, { keyPath: "id" });
+    };
+
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error);
+  });
+}
+
+async function getVideoRecords() {
+  const db = await openVideoDb();
+
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction(videoStore, "readonly");
+    const request = transaction.objectStore(videoStore).getAll();
+
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error);
+    transaction.oncomplete = () => db.close();
+  });
+}
+
+async function getVideoRecord(id) {
+  const db = await openVideoDb();
+
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction(videoStore, "readonly");
+    const request = transaction.objectStore(videoStore).get(id);
+
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error);
+    transaction.oncomplete = () => db.close();
+  });
+}
+
+async function saveVideoRecord(record) {
+  const db = await openVideoDb();
+
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction(videoStore, "readwrite");
+    const request = transaction.objectStore(videoStore).put(record);
+
+    request.onsuccess = () => resolve();
+    request.onerror = () => reject(request.error);
+    transaction.oncomplete = () => db.close();
+  });
+}
 
 function LinkCard({ href, icon: Icon, label }) {
   return (
@@ -74,7 +139,7 @@ function LinkCard({ href, icon: Icon, label }) {
   );
 }
 
-function IPhoneVideo({ eyebrow, src, title }) {
+function IPhoneVideo({ eyebrow, id, src, title }) {
   return (
     <article className="group">
       <div className="mx-auto w-full max-w-[280px] rounded-[42px] bg-neutral-950 p-3 shadow-[0_30px_80px_rgba(23,23,23,0.28)] transition duration-300 group-hover:-translate-y-2">
@@ -101,7 +166,7 @@ function IPhoneVideo({ eyebrow, src, title }) {
       </div>
       <div className="mx-auto mt-5 max-w-[280px]">
         <p className="text-xs font-black uppercase tracking-[0.18em] text-neutral-950/55">
-          {eyebrow}
+          Slot {id} · {eyebrow}
         </p>
         <h3 className="mt-2 text-2xl font-black leading-tight tracking-normal text-neutral-950">
           {title}
@@ -111,22 +176,245 @@ function IPhoneVideo({ eyebrow, src, title }) {
   );
 }
 
+function AdminPanel({
+  onClose,
+  onSave,
+  unlocked,
+  setUnlocked,
+  videoItems,
+}) {
+  const [password, setPassword] = useState("");
+  const [passwordError, setPasswordError] = useState("");
+  const [selectedId, setSelectedId] = useState(1);
+  const selectedVideo = videoItems.find((video) => video.id === selectedId);
+  const [eyebrow, setEyebrow] = useState(selectedVideo?.eyebrow || "");
+  const [title, setTitle] = useState(selectedVideo?.title || "");
+  const [file, setFile] = useState(null);
+  const [saved, setSaved] = useState(false);
+
+  useEffect(() => {
+    setEyebrow(selectedVideo?.eyebrow || "");
+    setTitle(selectedVideo?.title || "");
+    setFile(null);
+    setSaved(false);
+  }, [selectedId, selectedVideo?.eyebrow, selectedVideo?.title]);
+
+  function handlePasswordSubmit(event) {
+    event.preventDefault();
+    if (password === adminPassword) {
+      setUnlocked(true);
+      setPasswordError("");
+      return;
+    }
+
+    setPasswordError("Wrong password.");
+  }
+
+  async function handleSave(event) {
+    event.preventDefault();
+    await onSave({
+      eyebrow,
+      file,
+      id: selectedId,
+      title,
+    });
+    setSaved(true);
+    setFile(null);
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-neutral-950/55 p-4 backdrop-blur-sm sm:items-center">
+      <div className="w-full max-w-xl rounded-[12px] border border-neutral-950/15 bg-[#fff8df] p-5 shadow-[0_30px_100px_rgba(0,0,0,0.35)] sm:p-6">
+        <div className="mb-5 flex items-center justify-between gap-4">
+          <div>
+            <p className="text-xs font-black uppercase tracking-[0.18em] text-yellow-700">
+              Admin
+            </p>
+            <h2 className="mt-1 text-3xl font-black tracking-normal">
+              Video slots
+            </h2>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="flex size-10 items-center justify-center rounded-full bg-neutral-950 text-white transition hover:bg-neutral-800"
+            aria-label="Close admin panel"
+          >
+            <X size={20} />
+          </button>
+        </div>
+
+        {!unlocked ? (
+          <form onSubmit={handlePasswordSubmit} className="space-y-4">
+            <label className="block">
+              <span className="mb-2 block text-sm font-black text-neutral-800">
+                Password
+              </span>
+              <input
+                type="password"
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+                className="w-full rounded-[8px] border border-neutral-950/20 bg-white px-4 py-3 text-lg font-bold outline-none ring-yellow-500/0 transition focus:border-neutral-950 focus:ring-4 focus:ring-yellow-500/25"
+                autoFocus
+              />
+            </label>
+            {passwordError ? (
+              <p className="text-sm font-bold text-red-700">{passwordError}</p>
+            ) : null}
+            <button
+              type="submit"
+              className="flex w-full items-center justify-center gap-2 rounded-[8px] bg-neutral-950 px-5 py-4 font-black text-white transition hover:bg-neutral-800"
+            >
+              <Lock size={18} className="text-yellow-300" />
+              Unlock
+            </button>
+          </form>
+        ) : (
+          <form onSubmit={handleSave} className="space-y-4">
+            <div className="grid gap-3 sm:grid-cols-3">
+              {videoItems.map((video) => (
+                <button
+                  type="button"
+                  key={video.id}
+                  onClick={() => setSelectedId(video.id)}
+                  className={`rounded-[8px] border px-4 py-3 text-left text-sm font-black transition ${
+                    selectedId === video.id
+                      ? "border-neutral-950 bg-yellow-300"
+                      : "border-neutral-950/15 bg-white hover:border-neutral-950"
+                  }`}
+                >
+                  Slot {video.id}
+                </button>
+              ))}
+            </div>
+
+            <div className="rounded-[8px] border border-neutral-950/15 bg-white/80 p-4 text-sm font-bold text-neutral-800">
+              Uploading to <span className="text-yellow-800">Slot {selectedId}</span>
+            </div>
+
+            <label className="block">
+              <span className="mb-2 block text-sm font-black text-neutral-800">
+                Small label
+              </span>
+              <input
+                type="text"
+                value={eyebrow}
+                onChange={(event) => setEyebrow(event.target.value)}
+                className="w-full rounded-[8px] border border-neutral-950/20 bg-white px-4 py-3 font-bold outline-none transition focus:border-neutral-950 focus:ring-4 focus:ring-yellow-500/25"
+              />
+            </label>
+
+            <label className="block">
+              <span className="mb-2 block text-sm font-black text-neutral-800">
+                Title
+              </span>
+              <input
+                type="text"
+                value={title}
+                onChange={(event) => setTitle(event.target.value)}
+                className="w-full rounded-[8px] border border-neutral-950/20 bg-white px-4 py-3 font-bold outline-none transition focus:border-neutral-950 focus:ring-4 focus:ring-yellow-500/25"
+              />
+            </label>
+
+            <label className="block cursor-pointer rounded-[8px] border border-dashed border-neutral-950/30 bg-white/80 p-5 text-center font-black transition hover:border-neutral-950 hover:bg-white">
+              <Upload className="mx-auto mb-2 text-yellow-700" size={24} />
+              {file ? file.name : "Choose video for this slot"}
+              <input
+                type="file"
+                accept="video/*"
+                onChange={(event) => setFile(event.target.files?.[0] || null)}
+                className="sr-only"
+              />
+            </label>
+
+            {saved ? (
+              <p className="text-sm font-bold text-green-700">
+                Saved to this browser.
+              </p>
+            ) : null}
+
+            <button
+              type="submit"
+              className="flex w-full items-center justify-center gap-2 rounded-[8px] bg-neutral-950 px-5 py-4 font-black text-white transition hover:bg-neutral-800"
+            >
+              <Save size={18} className="text-yellow-300" />
+              Save Slot {selectedId}
+            </button>
+          </form>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default function App() {
   const year = new Date().getFullYear();
-  const [previewVideo, setPreviewVideo] = useState("");
+  const [adminOpen, setAdminOpen] = useState(false);
+  const [adminUnlocked, setAdminUnlocked] = useState(false);
+  const [videoItems, setVideoItems] = useState(defaultVideoSlots);
+
+  useEffect(() => {
+    let mounted = true;
+
+    getVideoRecords()
+      .then((records) => {
+        if (!mounted) return;
+
+        const nextVideos = defaultVideoSlots.map((slot) => {
+          const record = records.find((item) => item.id === slot.id);
+          if (!record) return slot;
+
+          return {
+            ...slot,
+            eyebrow: record.eyebrow || slot.eyebrow,
+            src: record.blob ? URL.createObjectURL(record.blob) : slot.src,
+            title: record.title || slot.title,
+          };
+        });
+
+        setVideoItems(nextVideos);
+      })
+      .catch(() => {
+        setVideoItems(defaultVideoSlots);
+      });
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   useEffect(() => {
     return () => {
-      if (previewVideo) URL.revokeObjectURL(previewVideo);
+      videoItems.forEach((video) => {
+        if (video.src?.startsWith("blob:")) URL.revokeObjectURL(video.src);
+      });
     };
-  }, [previewVideo]);
+  }, [videoItems]);
 
-  function handleVideoUpload(event) {
-    const file = event.target.files?.[0];
-    if (!file) return;
+  async function handleVideoSave({ eyebrow, file, id, title }) {
+    const existing = await getVideoRecord(id);
+    const blob = file || existing?.blob || null;
 
-    if (previewVideo) URL.revokeObjectURL(previewVideo);
-    setPreviewVideo(URL.createObjectURL(file));
+    await saveVideoRecord({
+      blob,
+      eyebrow,
+      id,
+      title,
+    });
+
+    setVideoItems((currentVideos) =>
+      currentVideos.map((video) => {
+        if (video.id !== id) return video;
+        if (video.src?.startsWith("blob:")) URL.revokeObjectURL(video.src);
+
+        return {
+          ...video,
+          eyebrow,
+          src: blob ? URL.createObjectURL(blob) : "",
+          title,
+        };
+      })
+    );
   }
 
   return (
@@ -137,10 +425,14 @@ export default function App() {
 
         <div className="mx-auto grid min-h-[calc(100vh-80px)] w-full max-w-6xl content-center gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
           <div className="animate-rise-in text-center lg:text-left">
-            <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-neutral-950/15 bg-white/55 px-4 py-2 text-sm font-semibold text-neutral-800 shadow-sm">
+            <button
+              type="button"
+              onClick={() => setAdminOpen(true)}
+              className="mb-6 inline-flex items-center gap-2 rounded-full border border-neutral-950/15 bg-white/55 px-4 py-2 text-sm font-semibold text-neutral-800 shadow-sm transition hover:-translate-y-0.5 hover:border-neutral-950"
+            >
               <Sparkles size={16} color={accent} />
               <span>@brave_spark_</span>
-            </div>
+            </button>
 
             <h1 className="mx-auto max-w-4xl text-balance text-5xl font-black leading-[0.95] tracking-normal text-neutral-950 sm:text-6xl md:text-7xl lg:mx-0">
               Brave Spark
@@ -213,30 +505,23 @@ export default function App() {
             </div>
 
             <div className="rounded-[8px] border border-neutral-950/20 bg-white/75 p-4 shadow-[0_18px_55px_rgba(23,23,23,0.12)]">
-              <label className="flex cursor-pointer items-center justify-between gap-4 rounded-[8px] bg-neutral-950 px-5 py-4 text-left font-black text-white transition duration-300 hover:-translate-y-0.5 hover:bg-neutral-800">
+              <button
+                type="button"
+                onClick={() => setAdminOpen(true)}
+                className="flex w-full items-center justify-between gap-4 rounded-[8px] bg-neutral-950 px-5 py-4 text-left font-black text-white transition duration-300 hover:-translate-y-0.5 hover:bg-neutral-800"
+              >
                 <span className="flex items-center gap-3">
                   <Upload size={21} className="text-yellow-300" />
-                  <span>Upload Preview</span>
+                  <span>Manage Videos</span>
                 </span>
                 <ArrowUpRight size={21} className="text-yellow-300" />
-                <input
-                  type="file"
-                  accept="video/*"
-                  onChange={handleVideoUpload}
-                  className="sr-only"
-                />
-              </label>
+              </button>
             </div>
           </div>
 
           <div className="grid gap-10 md:grid-cols-3">
-            <IPhoneVideo
-              eyebrow="Preview Slot"
-              title={previewVideo ? "Local upload preview" : "Drop in a reel"}
-              src={previewVideo}
-            />
-            {videoSlots.map((video) => (
-              <IPhoneVideo key={video.title} {...video} />
+            {videoItems.map((video) => (
+              <IPhoneVideo key={video.id} {...video} />
             ))}
           </div>
         </div>
@@ -245,6 +530,16 @@ export default function App() {
       <footer className="px-5 pb-8 text-center text-sm font-semibold text-neutral-600 sm:px-8">
         Brave Spark · {year} · <span aria-label="spark">🔥</span>
       </footer>
+
+      {adminOpen ? (
+        <AdminPanel
+          onClose={() => setAdminOpen(false)}
+          onSave={handleVideoSave}
+          setUnlocked={setAdminUnlocked}
+          unlocked={adminUnlocked}
+          videoItems={videoItems}
+        />
+      ) : null}
     </main>
   );
 }
