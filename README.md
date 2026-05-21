@@ -6,10 +6,8 @@ Single-page React + Tailwind link-in-bio / portfolio site for Brave Spark.
 
 - Replace `public/joey-profile.jpg` with Joey's real profile photo.
 - Edit bio copy and links in `src/App.jsx`.
-- Add video embeds in the `videos` array in `src/App.jsx`.
-  - YouTube: use `https://www.youtube.com/embed/VIDEO_ID`
-  - Vimeo: use `https://player.vimeo.com/video/VIDEO_ID`
-  - TikTok: use the official embed/player URL from TikTok's share embed option.
+- Add permanent video files to `public/videos/`, then set `src` in the `videoSlots` array in `src/App.jsx`, for example `/videos/motivation-reel.mp4`.
+- The on-page upload control previews a local video in the browser only; it does not permanently save files to the deployed site.
 
 ## Run
 

@@ -1,9 +1,13 @@
+import { useEffect, useState } from "react";
 import {
   ArrowUpRight,
+  Clapperboard,
   Flame,
   Instagram,
   Mail,
+  Play,
   Sparkles,
+  Upload,
 } from "lucide-react";
 
 const accent = "#f5b700";
@@ -33,6 +37,21 @@ const links = [
   },
 ];
 
+// SWAP THESE: Add permanent vertical videos to public/videos and set src.
+// Example: src: "/videos/motivation-reel.mp4"
+const videoSlots = [
+  {
+    eyebrow: "Featured Reel",
+    title: "Motivation that hits",
+    src: "",
+  },
+  {
+    eyebrow: "Story Clip",
+    title: "Real talk, sharp cut",
+    src: "",
+  },
+];
+
 function LinkCard({ href, icon: Icon, label }) {
   return (
     <a
@@ -55,8 +74,60 @@ function LinkCard({ href, icon: Icon, label }) {
   );
 }
 
+function IPhoneVideo({ eyebrow, src, title }) {
+  return (
+    <article className="group">
+      <div className="mx-auto w-full max-w-[280px] rounded-[42px] bg-neutral-950 p-3 shadow-[0_30px_80px_rgba(23,23,23,0.28)] transition duration-300 group-hover:-translate-y-2">
+        <div className="relative overflow-hidden rounded-[32px] bg-neutral-900">
+          <div className="absolute left-1/2 top-0 z-20 h-6 w-28 -translate-x-1/2 rounded-b-2xl bg-neutral-950" />
+          <div className="aspect-[9/16]">
+            {src ? (
+              <video
+                src={src}
+                controls
+                playsInline
+                preload="metadata"
+                className="h-full w-full object-cover"
+              />
+            ) : (
+              <div className="flex h-full items-center justify-center bg-[radial-gradient(circle_at_30%_18%,#fff0a3_0%,#f5b700_28%,#161616_72%)] text-neutral-950">
+                <div className="flex size-20 items-center justify-center rounded-full bg-white/95 shadow-[0_18px_45px_rgba(0,0,0,0.3)]">
+                  <Play size={34} fill="currentColor" />
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+      <div className="mx-auto mt-5 max-w-[280px]">
+        <p className="text-xs font-black uppercase tracking-[0.18em] text-neutral-950/55">
+          {eyebrow}
+        </p>
+        <h3 className="mt-2 text-2xl font-black leading-tight tracking-normal text-neutral-950">
+          {title}
+        </h3>
+      </div>
+    </article>
+  );
+}
+
 export default function App() {
   const year = new Date().getFullYear();
+  const [previewVideo, setPreviewVideo] = useState("");
+
+  useEffect(() => {
+    return () => {
+      if (previewVideo) URL.revokeObjectURL(previewVideo);
+    };
+  }, [previewVideo]);
+
+  function handleVideoUpload(event) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (previewVideo) URL.revokeObjectURL(previewVideo);
+    setPreviewVideo(URL.createObjectURL(file));
+  }
 
   return (
     <main className="min-h-screen overflow-hidden bg-[#fff8df] text-neutral-950">
@@ -125,6 +196,49 @@ export default function App() {
               ))}
             </div>
           </article>
+        </div>
+      </section>
+
+      <section className="bg-[#f5b700] px-5 py-20 sm:px-8 lg:px-10">
+        <div className="mx-auto max-w-6xl">
+          <div className="mb-12 grid gap-6 lg:grid-cols-[0.85fr_1.15fr] lg:items-end">
+            <div>
+              <div className="mb-5 inline-flex items-center gap-2 rounded-full bg-neutral-950 px-4 py-2 text-sm font-black text-yellow-300 shadow-[0_18px_40px_rgba(23,23,23,0.22)]">
+                <Clapperboard size={17} />
+                <span>Video Work</span>
+              </div>
+              <h2 className="max-w-3xl text-5xl font-black leading-none tracking-normal text-neutral-950 sm:text-6xl">
+                Built for vertical stories.
+              </h2>
+            </div>
+
+            <div className="rounded-[8px] border border-neutral-950/20 bg-white/75 p-4 shadow-[0_18px_55px_rgba(23,23,23,0.12)]">
+              <label className="flex cursor-pointer items-center justify-between gap-4 rounded-[8px] bg-neutral-950 px-5 py-4 text-left font-black text-white transition duration-300 hover:-translate-y-0.5 hover:bg-neutral-800">
+                <span className="flex items-center gap-3">
+                  <Upload size={21} className="text-yellow-300" />
+                  <span>Upload Preview</span>
+                </span>
+                <ArrowUpRight size={21} className="text-yellow-300" />
+                <input
+                  type="file"
+                  accept="video/*"
+                  onChange={handleVideoUpload}
+                  className="sr-only"
+                />
+              </label>
+            </div>
+          </div>
+
+          <div className="grid gap-10 md:grid-cols-3">
+            <IPhoneVideo
+              eyebrow="Preview Slot"
+              title={previewVideo ? "Local upload preview" : "Drop in a reel"}
+              src={previewVideo}
+            />
+            {videoSlots.map((video) => (
+              <IPhoneVideo key={video.title} {...video} />
+            ))}
+          </div>
         </div>
       </section>
 
