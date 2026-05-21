@@ -1,10 +1,12 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
+import { upload } from "@vercel/blob/client";
 import {
   ArrowUpRight,
   Clapperboard,
   Instagram,
   Lock,
   Mail,
+  Maximize2,
   Play,
   Save,
   Sparkles,
@@ -40,8 +42,6 @@ const links = [
 ];
 
 const adminPassword = "3907";
-const dbName = "brave-spark-admin";
-const videoStore = "videos";
 
 const defaultVideoSlots = [
   {
@@ -63,58 +63,6 @@ const defaultVideoSlots = [
     src: "",
   },
 ];
-
-function openVideoDb() {
-  return new Promise((resolve, reject) => {
-    const request = indexedDB.open(dbName, 1);
-
-    request.onupgradeneeded = () => {
-      request.result.createObjectStore(videoStore, { keyPath: "id" });
-    };
-
-    request.onsuccess = () => resolve(request.result);
-    request.onerror = () => reject(request.error);
-  });
-}
-
-async function getVideoRecords() {
-  const db = await openVideoDb();
-
-  return new Promise((resolve, reject) => {
-    const transaction = db.transaction(videoStore, "readonly");
-    const request = transaction.objectStore(videoStore).getAll();
-
-    request.onsuccess = () => resolve(request.result);
-    request.onerror = () => reject(request.error);
-    transaction.oncomplete = () => db.close();
-  });
-}
-
-async function getVideoRecord(id) {
-  const db = await openVideoDb();
-
-  return new Promise((resolve, reject) => {
-    const transaction = db.transaction(videoStore, "readonly");
-    const request = transaction.objectStore(videoStore).get(id);
-
-    request.onsuccess = () => resolve(request.result);
-    request.onerror = () => reject(request.error);
-    transaction.oncomplete = () => db.close();
-  });
-}
-
-async function saveVideoRecord(record) {
-  const db = await openVideoDb();
-
-  return new Promise((resolve, reject) => {
-    const transaction = db.transaction(videoStore, "readwrite");
-    const request = transaction.objectStore(videoStore).put(record);
-
-    request.onsuccess = () => resolve();
-    request.onerror = () => reject(request.error);
-    transaction.oncomplete = () => db.close();
-  });
-}
 
 function LinkCard({ href, icon: Icon, label }) {
   return (
@@ -138,20 +86,7 @@ function LinkCard({ href, icon: Icon, label }) {
   );
 }
 
-function IPhoneVideo({ eyebrow, src, title }) {
-  const videoRef = useRef(null);
-
-  function openFullscreen() {
-    const video = videoRef.current;
-    if (!video) return;
-
-    if (video.requestFullscreen) {
-      video.requestFullscreen();
-    } else if (video.webkitEnterFullscreen) {
-      video.webkitEnterFullscreen();
-    }
-  }
-
+function IPhoneVideo({ eyebrow, onOpen, src, title }) {
   return (
     <article className="group">
       <div className="mx-auto w-full max-w-[280px] rounded-[42px] bg-neutral-950 p-3 shadow-[0_30px_80px_rgba(23,23,23,0.28)] transition duration-300 group-hover:-translate-y-2">
@@ -161,7 +96,6 @@ function IPhoneVideo({ eyebrow, src, title }) {
             {src ? (
               <div className="relative h-full bg-black">
                 <video
-                  ref={videoRef}
                   src={src}
                   controls
                   playsInline
@@ -170,10 +104,11 @@ function IPhoneVideo({ eyebrow, src, title }) {
                 />
                 <button
                   type="button"
-                  onClick={openFullscreen}
-                  className="absolute bottom-4 right-4 rounded-full bg-white px-4 py-2 text-xs font-black text-neutral-950 shadow-[0_14px_35px_rgba(0,0,0,0.3)] transition hover:-translate-y-0.5"
+                  onClick={onOpen}
+                  className="absolute right-4 top-8 flex size-10 items-center justify-center rounded-full bg-white text-neutral-950 shadow-[0_14px_35px_rgba(0,0,0,0.3)] transition hover:-translate-y-0.5"
+                  aria-label={`Open ${title}`}
                 >
-                  Fullscreen
+                  <Maximize2 size={17} />
                 </button>
               </div>
             ) : (
@@ -198,6 +133,32 @@ function IPhoneVideo({ eyebrow, src, title }) {
   );
 }
 
+function VideoLightbox({ onClose, video }) {
+  if (!video) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-neutral-950/90 p-4">
+      <button
+        type="button"
+        onClick={onClose}
+        className="absolute right-4 top-4 flex size-11 items-center justify-center rounded-full bg-white text-neutral-950 transition hover:-translate-y-0.5"
+        aria-label="Close video"
+      >
+        <X size={22} />
+      </button>
+      <div className="h-full max-h-[88vh] w-full max-w-5xl">
+        <video
+          src={video.src}
+          controls
+          autoPlay
+          playsInline
+          className="h-full w-full rounded-[12px] bg-black object-contain"
+        />
+      </div>
+    </div>
+  );
+}
+
 function AdminPanel({
   onClose,
   onSave,
@@ -213,12 +174,15 @@ function AdminPanel({
   const [title, setTitle] = useState(selectedVideo?.title || "");
   const [file, setFile] = useState(null);
   const [saved, setSaved] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState("");
 
   useEffect(() => {
     setEyebrow(selectedVideo?.eyebrow || "");
     setTitle(selectedVideo?.title || "");
     setFile(null);
     setSaved(false);
+    setSaveError("");
   }, [selectedId, selectedVideo?.eyebrow, selectedVideo?.title]);
 
   function handlePasswordSubmit(event) {
@@ -234,14 +198,25 @@ function AdminPanel({
 
   async function handleSave(event) {
     event.preventDefault();
-    await onSave({
-      eyebrow,
-      file,
-      id: selectedId,
-      title,
-    });
-    setSaved(true);
-    setFile(null);
+    setSaving(true);
+    setSaveError("");
+    setSaved(false);
+
+    try {
+      await onSave({
+        eyebrow,
+        file,
+        id: selectedId,
+        password,
+        title,
+      });
+      setSaved(true);
+      setFile(null);
+    } catch (error) {
+      setSaveError(error?.message || "Save failed.");
+    } finally {
+      setSaving(false);
+    }
   }
 
   return (
@@ -351,16 +326,20 @@ function AdminPanel({
 
             {saved ? (
               <p className="text-sm font-bold text-green-700">
-                Saved to this browser.
+                Saved live for everyone.
               </p>
+            ) : null}
+            {saveError ? (
+              <p className="text-sm font-bold text-red-700">{saveError}</p>
             ) : null}
 
             <button
               type="submit"
+              disabled={saving}
               className="flex w-full items-center justify-center gap-2 rounded-[8px] bg-neutral-950 px-5 py-4 font-black text-white transition hover:bg-neutral-800"
             >
               <Save size={18} className="text-yellow-300" />
-              Save Slot {selectedId}
+              {saving ? "Saving..." : `Save Slot ${selectedId}`}
             </button>
           </form>
         )}
@@ -373,31 +352,22 @@ export default function App() {
   const year = new Date().getFullYear();
   const [adminOpen, setAdminOpen] = useState(false);
   const [adminUnlocked, setAdminUnlocked] = useState(false);
+  const [activeVideo, setActiveVideo] = useState(null);
   const [videoItems, setVideoItems] = useState(defaultVideoSlots);
+  const [storageMessage, setStorageMessage] = useState("");
 
   useEffect(() => {
     let mounted = true;
 
-    getVideoRecords()
-      .then((records) => {
+    fetch("/api/videos")
+      .then((response) => response.json())
+      .then((data) => {
         if (!mounted) return;
-
-        const nextVideos = defaultVideoSlots.map((slot) => {
-          const record = records.find((item) => item.id === slot.id);
-          if (!record) return slot;
-
-          return {
-            ...slot,
-            eyebrow: record.eyebrow || slot.eyebrow,
-            src: record.blob ? URL.createObjectURL(record.blob) : slot.src,
-            title: record.title || slot.title,
-          };
-        });
-
-        setVideoItems(nextVideos);
+        if (data.videos) setVideoItems(data.videos);
+        if (data.error) setStorageMessage(data.error);
       })
       .catch(() => {
-        setVideoItems(defaultVideoSlots);
+        if (mounted) setVideoItems(defaultVideoSlots);
       });
 
     return () => {
@@ -405,38 +375,57 @@ export default function App() {
     };
   }, []);
 
-  useEffect(() => {
-    return () => {
-      videoItems.forEach((video) => {
-        if (video.src?.startsWith("blob:")) URL.revokeObjectURL(video.src);
+  async function refreshVideos() {
+    const response = await fetch("/api/videos");
+    const data = await response.json();
+    if (!response.ok) {
+      throw new Error(data.error || "Could not refresh videos.");
+    }
+    setVideoItems(data.videos || defaultVideoSlots);
+  }
+
+  async function handleVideoSave({ eyebrow, file, id, password, title }) {
+    if (file) {
+      const safeName = file.name.replace(/[^a-z0-9._-]/gi, "-").toLowerCase();
+      await upload(`brave-spark/videos/slot-${id}-${safeName}`, file, {
+        access: "public",
+        handleUploadUrl: "/api/blob-upload",
+        multipart: true,
+        clientPayload: JSON.stringify({
+          eyebrow,
+          id,
+          password,
+          title,
+        }),
       });
-    };
-  }, [videoItems]);
 
-  async function handleVideoSave({ eyebrow, file, id, title }) {
-    const existing = await getVideoRecord(id);
-    const blob = file || existing?.blob || null;
+      await refreshVideos();
+      return;
+    }
 
-    await saveVideoRecord({
-      blob,
-      eyebrow,
-      id,
-      title,
+    const response = await fetch("/api/videos", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        eyebrow,
+        id,
+        password,
+        title,
+      }),
     });
 
-    setVideoItems((currentVideos) =>
-      currentVideos.map((video) => {
-        if (video.id !== id) return video;
-        if (video.src?.startsWith("blob:")) URL.revokeObjectURL(video.src);
+    const data = await response.json();
+    if (!response.ok) {
+      throw new Error(data.error || "Could not save video.");
+    }
+    setVideoItems(data.videos || defaultVideoSlots);
+  }
 
-        return {
-          ...video,
-          eyebrow,
-          src: blob ? URL.createObjectURL(blob) : "",
-          title,
-        };
-      })
-    );
+  function openAdmin() {
+    setAdminUnlocked(false);
+    setAdminOpen(true);
   }
 
   return (
@@ -521,9 +510,18 @@ export default function App() {
 
           <div className="grid gap-10 md:grid-cols-3">
             {videoItems.map((video) => (
-              <IPhoneVideo key={video.id} {...video} />
+              <IPhoneVideo
+                key={video.id}
+                {...video}
+                onOpen={() => setActiveVideo(video)}
+              />
             ))}
           </div>
+          {storageMessage ? (
+            <p className="mt-8 text-sm font-bold text-neutral-950/65">
+              {storageMessage}
+            </p>
+          ) : null}
         </div>
       </section>
 
@@ -531,7 +529,7 @@ export default function App() {
         Brave Spark · {year} ·{" "}
         <button
           type="button"
-          onClick={() => setAdminOpen(true)}
+          onClick={openAdmin}
           className="inline-flex rounded-full px-1 transition hover:-translate-y-0.5 focus:outline-none focus:ring-4 focus:ring-yellow-500/30"
           aria-label="Open video admin"
         >
@@ -548,6 +546,10 @@ export default function App() {
           videoItems={videoItems}
         />
       ) : null}
+      <VideoLightbox
+        video={activeVideo}
+        onClose={() => setActiveVideo(null)}
+      />
     </main>
   );
 }
