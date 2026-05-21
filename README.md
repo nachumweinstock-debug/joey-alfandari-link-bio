@@ -1,6 +1,6 @@
-# Joey Alfandari Link Bio
+# Brave Spark Link Bio
 
-Single-page React + Tailwind link-in-bio / portfolio site for Joey Alfandari.
+Single-page React + Tailwind link-in-bio / portfolio site for Brave Spark.
 
 ## Customize
 

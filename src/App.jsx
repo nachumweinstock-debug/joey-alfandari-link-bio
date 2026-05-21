@@ -109,23 +109,30 @@ function LinkCard({ href, icon: Icon, label }) {
 
 function VideoCard({ embedUrl, role, title }) {
   return (
-    <article className="overflow-hidden rounded-[8px] border border-neutral-950/15 bg-white/70 shadow-[0_14px_45px_rgba(23,23,23,0.07)]">
-      <div className="aspect-video bg-neutral-950">
-        {embedUrl ? (
-          <iframe
-            src={embedUrl}
-            title={title}
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-            allowFullScreen
-            className="h-full w-full"
-          />
-        ) : (
-          <div className="flex h-full items-center justify-center bg-[linear-gradient(135deg,#171717_0%,#2d2d2d_58%,#f5b700_100%)] text-yellow-300">
-            <Play size={42} fill="currentColor" />
+    <article className="group">
+      <div className="mx-auto w-full max-w-[280px] rounded-[42px] bg-neutral-950 p-3 shadow-[0_28px_70px_rgba(23,23,23,0.22)] transition duration-300 group-hover:-translate-y-2 group-hover:shadow-[0_34px_90px_rgba(245,183,0,0.28)]">
+        <div className="relative overflow-hidden rounded-[32px] bg-neutral-900">
+          <div className="absolute left-1/2 top-0 z-10 h-6 w-28 -translate-x-1/2 rounded-b-2xl bg-neutral-950" />
+          <div className="aspect-[9/16]">
+            {embedUrl ? (
+              <iframe
+                src={embedUrl}
+                title={title}
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowFullScreen
+                className="h-full w-full"
+              />
+            ) : (
+              <div className="flex h-full items-center justify-center bg-[radial-gradient(circle_at_28%_20%,#ffe66d_0%,#f5b700_28%,#171717_72%)] text-neutral-950">
+                <div className="flex size-20 items-center justify-center rounded-full bg-white/90 shadow-[0_18px_45px_rgba(0,0,0,0.28)]">
+                  <Play size={34} fill="currentColor" />
+                </div>
+              </div>
+            )}
           </div>
-        )}
+        </div>
       </div>
-      <div className="p-5">
+      <div className="mx-auto mt-5 max-w-[280px]">
         <h3 className="text-xl font-black tracking-normal text-neutral-950">
           {title}
         </h3>
@@ -154,43 +161,49 @@ export default function App() {
 
   return (
     <main className="min-h-screen overflow-hidden bg-[#fff8df] text-neutral-950">
-      <section className="relative flex min-h-screen items-center px-5 py-8 sm:px-8 lg:px-10">
-        <div className="pointer-events-none absolute left-0 top-0 h-40 w-40 -translate-x-1/2 -translate-y-1/2 rounded-full bg-yellow-400/25 blur-3xl" />
-        <div className="pointer-events-none absolute bottom-12 right-0 h-48 w-48 translate-x-1/3 rounded-full bg-yellow-500/20 blur-3xl" />
+      <section className="relative px-5 py-10 sm:px-8 lg:px-10">
+        <div className="pointer-events-none absolute left-0 top-0 h-56 w-56 -translate-x-1/2 -translate-y-1/2 rounded-full bg-yellow-400/30 blur-3xl" />
+        <div className="pointer-events-none absolute bottom-10 right-0 h-64 w-64 translate-x-1/3 rounded-full bg-yellow-500/25 blur-3xl" />
 
-        <div className="mx-auto grid w-full max-w-5xl gap-10 lg:grid-cols-[1fr_420px] lg:items-center">
+        <div className="mx-auto grid min-h-[calc(100vh-80px)] w-full max-w-6xl content-center gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
           <div className="animate-rise-in text-center lg:text-left">
             <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-neutral-950/15 bg-white/55 px-4 py-2 text-sm font-semibold text-neutral-800 shadow-sm">
               <Sparkles size={16} color={accent} />
               <span>@brave_spark_</span>
             </div>
 
-            <h1 className="mx-auto max-w-4xl text-balance text-6xl font-black leading-[0.92] tracking-normal text-neutral-950 sm:text-7xl md:text-8xl lg:mx-0">
-              Joey Alfandari
+            <h1 className="mx-auto max-w-4xl text-balance text-5xl font-black leading-[0.95] tracking-normal text-neutral-950 sm:text-6xl md:text-7xl lg:mx-0">
+              Brave Spark
             </h1>
 
-            <p className="mx-auto mt-6 max-w-2xl text-balance text-xl font-medium leading-8 text-neutral-700 sm:text-2xl lg:mx-0">
-              Building things. Telling stories. Sparking something.
+            <p className="mx-auto mt-5 max-w-xl text-balance text-xl font-semibold leading-8 text-neutral-700 sm:text-2xl lg:mx-0">
+              Motivation, mindset, and real-life growth with a human punch.
             </p>
+
+            <div className="mx-auto mt-8 grid max-w-xl gap-3 sm:grid-cols-3 lg:mx-0">
+              {links.map((link) => (
+                <LinkCard key={link.label} {...link} />
+              ))}
+            </div>
           </div>
 
-          <div className="animate-rise-in mx-auto w-full max-w-[420px] [animation-delay:120ms]">
-            <div className="relative aspect-[4/3] rounded-[32px] border border-neutral-950/15 bg-white p-3 shadow-[0_24px_70px_rgba(23,23,23,0.15)]">
-              <div className="absolute -right-4 -top-4 flex size-16 items-center justify-center rounded-full bg-yellow-400 text-neutral-950 shadow-[0_16px_35px_rgba(245,183,0,0.35)]">
+          <div className="animate-rise-in mx-auto w-full [animation-delay:120ms]">
+            <div className="relative rounded-[28px] border border-neutral-950/15 bg-white p-3 shadow-[0_24px_70px_rgba(23,23,23,0.15)]">
+              <div className="absolute -right-4 -top-4 z-10 flex size-16 items-center justify-center rounded-full bg-yellow-400 text-neutral-950 shadow-[0_16px_35px_rgba(245,183,0,0.35)]">
                 <Flame size={28} fill="currentColor" />
               </div>
 
               {profilePhotoUrl && photoReady ? (
                 <img
                   src={profilePhotoUrl}
-                  alt="Joey Alfandari"
+                  alt="Brave Spark"
                   onError={() => setPhotoReady(false)}
-                  className="h-full w-full rounded-[24px] object-cover object-center"
+                  className="aspect-[1596/656] h-auto w-full rounded-[20px] object-contain"
                 />
               ) : (
-                <div className="flex h-full w-full items-center justify-center rounded-[24px] bg-[linear-gradient(135deg,#171717_0%,#2b2b2b_48%,#f5b700_100%)] text-center">
+                <div className="flex aspect-[1596/656] w-full items-center justify-center rounded-[20px] bg-[linear-gradient(135deg,#171717_0%,#2b2b2b_48%,#f5b700_100%)] text-center">
                   <div className="rounded-full border border-white/20 bg-white/10 px-8 py-7 text-white backdrop-blur">
-                    <div className="text-5xl font-black tracking-normal">JA</div>
+                    <div className="text-5xl font-black tracking-normal">BS</div>
                     <div className="mt-2 text-xs font-bold uppercase tracking-[0.3em] text-white/75">
                       Photo
                     </div>
@@ -204,7 +217,7 @@ export default function App() {
 
       <section className="px-5 pb-20 sm:px-8 lg:px-10">
         <div className="mx-auto grid max-w-5xl gap-8 lg:grid-cols-[0.85fr_1.15fr]">
-          <article className="animate-rise-in rounded-[8px] border border-neutral-950/15 bg-white/55 p-6 shadow-[0_14px_45px_rgba(23,23,23,0.07)] [animation-delay:220ms] sm:p-8">
+          <article className="animate-rise-in rounded-[8px] border border-neutral-950/15 bg-white/70 p-6 shadow-[0_14px_45px_rgba(23,23,23,0.07)] [animation-delay:220ms] sm:p-8">
             <p className="mb-4 text-sm font-black uppercase tracking-[0.18em] text-yellow-700">
               About
             </p>
@@ -216,17 +229,10 @@ export default function App() {
           </article>
 
           <div className="animate-rise-in [animation-delay:320ms]">
-            <section
-              id="projects"
-              className="space-y-4"
-              aria-label="Joey Alfandari links"
-            >
-              {links.map((link) => (
-                <LinkCard key={link.label} {...link} />
-              ))}
-            </section>
-
-            <div className="mt-5 rounded-[8px] border border-yellow-700/25 bg-yellow-400/20 p-4 text-sm font-semibold leading-6 text-neutral-800">
+            <div className="rounded-[8px] border border-yellow-700/25 bg-yellow-400/20 p-5 text-sm font-semibold leading-6 text-neutral-800">
+              <p className="mb-3 text-sm font-black uppercase tracking-[0.18em] text-yellow-800">
+                Quick Action
+              </p>
               <span className="text-yellow-800">{selectedLink.label}:</span>{" "}
               {selectedLink.note}
               <div className="mt-2 break-all font-mono text-xs font-medium text-neutral-600">
@@ -237,20 +243,20 @@ export default function App() {
         </div>
       </section>
 
-      <section id="videos" className="px-5 pb-20 sm:px-8 lg:px-10">
+      <section id="videos" className="bg-[#f5b700] px-5 py-20 sm:px-8 lg:px-10">
         <div className="mx-auto max-w-5xl">
-          <div className="mb-6 flex items-end justify-between gap-4">
+          <div className="mb-10 flex items-end justify-between gap-4">
             <div>
-              <p className="mb-3 text-sm font-black uppercase tracking-[0.18em] text-yellow-700">
+              <p className="mb-3 text-sm font-black uppercase tracking-[0.18em] text-neutral-950/70">
                 Video Work
               </p>
-              <h2 className="text-4xl font-black leading-none tracking-normal text-neutral-950 sm:text-5xl">
-                Built to embed clean.
+              <h2 className="max-w-2xl text-5xl font-black leading-none tracking-normal text-neutral-950 sm:text-6xl">
+                Vertical work should look loud.
               </h2>
             </div>
           </div>
 
-          <div className="grid gap-5 md:grid-cols-2">
+          <div className="grid gap-10 md:grid-cols-2">
             {videos.map((video) => (
               <VideoCard key={video.title} {...video} />
             ))}
@@ -259,7 +265,7 @@ export default function App() {
       </section>
 
       <footer className="px-5 pb-8 text-center text-sm font-semibold text-neutral-600 sm:px-8">
-        Joey Alfandari · {year} · <span aria-label="spark">🔥</span>
+        Brave Spark · {year} · <span aria-label="spark">🔥</span>
       </footer>
     </main>
   );
