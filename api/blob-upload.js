@@ -1,7 +1,11 @@
 const { handleUpload } = require("@vercel/blob/client");
 const { readManifest, writeManifest } = require("./video-data");
 
-const adminPassword = "3907";
+const adminPasswords = new Set(["3907", "joey"]);
+
+function isAdminPassword(value) {
+  return adminPasswords.has(String(value || "").trim().toLowerCase());
+}
 
 module.exports = async function handler(request, response) {
   try {
@@ -11,7 +15,7 @@ module.exports = async function handler(request, response) {
       onBeforeGenerateToken: async (_pathname, clientPayload) => {
         const payload = JSON.parse(clientPayload || "{}");
 
-        if (payload.password !== adminPassword) {
+        if (!isAdminPassword(payload.password)) {
           throw new Error("Unauthorized");
         }
 

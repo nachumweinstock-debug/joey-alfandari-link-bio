@@ -4,7 +4,11 @@ const {
   writeManifest,
 } = require("./video-data");
 
-const adminPassword = "3907";
+const adminPasswords = new Set(["3907", "joey"]);
+
+function isAdminPassword(value) {
+  return adminPasswords.has(String(value || "").trim().toLowerCase());
+}
 
 module.exports = async function handler(request, response) {
   try {
@@ -17,7 +21,7 @@ module.exports = async function handler(request, response) {
     if (request.method === "POST") {
       const { action, eyebrow, id, password, poster, src, title } = request.body || {};
 
-      if (password !== adminPassword) {
+      if (!isAdminPassword(password)) {
         return response.status(401).json({ error: "Unauthorized" });
       }
 
