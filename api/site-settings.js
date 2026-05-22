@@ -1,0 +1,43 @@
+const {
+  defaultSiteSettings,
+  readSettings,
+  writeSettings,
+} = require("./site-data");
+
+const adminPasswords = new Set(["3907", "joey"]);
+
+function isAdminPassword(value) {
+  return adminPasswords.has(String(value || "").trim().toLowerCase());
+}
+
+module.exports = async function handler(request, response) {
+  try {
+    if (request.method === "GET") {
+      const settings = await readSettings();
+      response.setHeader("Cache-Control", "no-store");
+      return response.status(200).json({ settings });
+    }
+
+    if (request.method === "POST") {
+      const { bio, handle, name, password, tagline } = request.body || {};
+
+      if (!isAdminPassword(password)) {
+        return response.status(401).json({ error: "Unauthorized" });
+      }
+
+      const settings = await writeSettings({ bio, handle, name, tagline });
+      return response.status(200).json({ settings });
+    }
+
+    response.setHeader("Allow", "GET, POST");
+    return response.status(405).json({ error: "Method not allowed" });
+  } catch (error) {
+    return response.status(500).json({
+      error:
+        process.env.BLOB_READ_WRITE_TOKEN || process.env.BLOB_STORE_ID
+          ? "Site settings failed"
+          : "Site settings storage is not configured",
+      fallback: defaultSiteSettings,
+    });
+  }
+};

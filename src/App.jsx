@@ -19,13 +19,17 @@ const accent = "#f5b700";
 // SWAP THIS: Replace public/joey-profile.jpg with Joey's real uploaded photo.
 const profilePhotoUrl = "/joey-profile.jpg";
 
-// SWAP THIS: Replace with Joey's real bio copy.
-const bioParagraphs = [
-  "I'm Brave Spark, a Long Island, New York creator making motivation feel human again.",
-  "My work mixes storytelling, humor, vulnerability, and sharp real-life messages for people who want more than empty inspiration.",
-  "Brave does not mean polished. Brave means showing up, telling the truth, and turning real moments into content that actually lands.",
-  "If it feels honest, cinematic, and a little uncomfortable in the right way, that's the spark.",
-];
+const defaultSiteSettings = {
+  handle: "@brave_spark_",
+  name: "Brave Spark",
+  tagline: "Motivation, mindset, and real-life growth with a human punch.",
+  bio: [
+    "I'm Brave Spark, a Long Island, New York creator making motivation feel human again.",
+    "My work mixes storytelling, humor, vulnerability, and sharp real-life messages for people who want more than empty inspiration.",
+    "Brave does not mean polished. Brave means showing up, telling the truth, and turning real moments into content that actually lands.",
+    "If it feels honest, cinematic, and a little uncomfortable in the right way, that's the spark.",
+  ].join("\n\n"),
+};
 
 // SWAP THESE: Replace href values with Joey's actual links.
 const links = [
@@ -46,6 +50,13 @@ const adminPasswords = new Set(["3907", "joey"]);
 
 function isAdminPassword(value) {
   return adminPasswords.has(String(value || "").trim().toLowerCase());
+}
+
+function getBioParagraphs(bio) {
+  return String(bio || "")
+    .split(/\n{2,}/)
+    .map((paragraph) => paragraph.trim())
+    .filter(Boolean);
 }
 
 const defaultVideoSlots = [
@@ -82,7 +93,7 @@ function LinkCard({ href, icon: Icon, label, variant = "light" }) {
       rel="noreferrer"
       className={`group flex min-h-[70px] items-center justify-between rounded-[8px] border px-5 py-4 text-left shadow-[0_12px_35px_rgba(23,23,23,0.06)] backdrop-blur transition duration-300 hover:-translate-y-1 hover:shadow-[0_18px_45px_rgba(23,23,23,0.12)] focus:outline-none focus:ring-4 focus:ring-yellow-500/30 ${
         isDark
-          ? "border-neutral-950 bg-black text-yellow-300 hover:bg-black"
+          ? "border-yellow-300 bg-black text-yellow-300 hover:bg-black"
           : "border-neutral-900/15 bg-white/75 text-neutral-950 hover:border-neutral-950 hover:bg-white"
       }`}
     >
@@ -187,6 +198,8 @@ function AdminPanel({
   onClose,
   onAdd,
   onSave,
+  onSaveSettings,
+  settings,
   unlocked,
   setUnlocked,
   videoItems,
@@ -203,8 +216,15 @@ function AdminPanel({
   const [poster, setPoster] = useState(selectedVideo?.poster || "");
   const [adding, setAdding] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [settingsSaved, setSettingsSaved] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [settingsSaving, setSettingsSaving] = useState(false);
   const [saveError, setSaveError] = useState("");
+  const [settingsError, setSettingsError] = useState("");
+  const [handle, setHandle] = useState(settings.handle);
+  const [name, setName] = useState(settings.name);
+  const [tagline, setTagline] = useState(settings.tagline);
+  const [bio, setBio] = useState(settings.bio);
 
   useEffect(() => {
     setEyebrow(selectedVideo?.eyebrow || "");
@@ -214,6 +234,15 @@ function AdminPanel({
     setSaved(false);
     setSaveError("");
   }, [selectedId, selectedVideo?.eyebrow, selectedVideo?.poster, selectedVideo?.title]);
+
+  useEffect(() => {
+    setHandle(settings.handle);
+    setName(settings.name);
+    setTagline(settings.tagline);
+    setBio(settings.bio);
+    setSettingsSaved(false);
+    setSettingsError("");
+  }, [settings.bio, settings.handle, settings.name, settings.tagline]);
 
   useEffect(() => {
     if (!file) {
@@ -265,6 +294,28 @@ function AdminPanel({
     }
   }
 
+  async function handleSettingsSave(event) {
+    event.preventDefault();
+    setSettingsSaving(true);
+    setSettingsSaved(false);
+    setSettingsError("");
+
+    try {
+      await onSaveSettings({
+        bio,
+        handle,
+        name,
+        password,
+        tagline,
+      });
+      setSettingsSaved(true);
+    } catch (error) {
+      setSettingsError(error?.message || "Account text save failed.");
+    } finally {
+      setSettingsSaving(false);
+    }
+  }
+
   function captureCurrentFrame() {
     const video = frameVideoRef.current;
     if (!video || !video.videoWidth || !video.videoHeight) {
@@ -307,7 +358,7 @@ function AdminPanel({
               Admin
             </p>
             <h2 className="mt-1 text-3xl font-black tracking-normal">
-              Video slots
+              Site controls
             </h2>
           </div>
           <button
@@ -346,7 +397,76 @@ function AdminPanel({
             </button>
           </form>
         ) : (
-          <form onSubmit={handleSave} className="space-y-4">
+          <div className="space-y-6">
+            <form
+              onSubmit={handleSettingsSave}
+              className="space-y-4 rounded-[10px] border border-neutral-950/15 bg-white/70 p-4"
+            >
+              <h3 className="text-xl font-black tracking-normal">Account text</h3>
+              <label className="block">
+                <span className="mb-2 block text-sm font-black text-neutral-800">
+                  Name
+                </span>
+                <input
+                  type="text"
+                  value={name}
+                  onChange={(event) => setName(event.target.value)}
+                  className="w-full rounded-[8px] border border-neutral-950/20 bg-white px-4 py-3 font-bold outline-none transition focus:border-neutral-950 focus:ring-4 focus:ring-yellow-500/25"
+                />
+              </label>
+              <label className="block">
+                <span className="mb-2 block text-sm font-black text-neutral-800">
+                  Handle
+                </span>
+                <input
+                  type="text"
+                  value={handle}
+                  onChange={(event) => setHandle(event.target.value)}
+                  className="w-full rounded-[8px] border border-neutral-950/20 bg-white px-4 py-3 font-bold outline-none transition focus:border-neutral-950 focus:ring-4 focus:ring-yellow-500/25"
+                />
+              </label>
+              <label className="block">
+                <span className="mb-2 block text-sm font-black text-neutral-800">
+                  Tagline
+                </span>
+                <textarea
+                  value={tagline}
+                  onChange={(event) => setTagline(event.target.value)}
+                  rows={2}
+                  className="w-full resize-y rounded-[8px] border border-neutral-950/20 bg-white px-4 py-3 font-bold outline-none transition focus:border-neutral-950 focus:ring-4 focus:ring-yellow-500/25"
+                />
+              </label>
+              <label className="block">
+                <span className="mb-2 block text-sm font-black text-neutral-800">
+                  Bio
+                </span>
+                <textarea
+                  value={bio}
+                  onChange={(event) => setBio(event.target.value)}
+                  rows={7}
+                  className="w-full resize-y rounded-[8px] border border-neutral-950/20 bg-white px-4 py-3 font-bold leading-7 outline-none transition focus:border-neutral-950 focus:ring-4 focus:ring-yellow-500/25"
+                />
+              </label>
+              {settingsSaved ? (
+                <p className="text-sm font-bold text-green-700">
+                  Account text saved live.
+                </p>
+              ) : null}
+              {settingsError ? (
+                <p className="text-sm font-bold text-red-700">{settingsError}</p>
+              ) : null}
+              <button
+                type="submit"
+                disabled={settingsSaving}
+                className="flex w-full items-center justify-center gap-2 rounded-[8px] bg-neutral-950 px-5 py-4 font-black text-white transition hover:bg-neutral-800"
+              >
+                <Save size={18} className="text-yellow-300" />
+                {settingsSaving ? "Saving..." : "Save account text"}
+              </button>
+            </form>
+
+            <form onSubmit={handleSave} className="space-y-4 rounded-[10px] border border-neutral-950/15 bg-white/70 p-4">
+              <h3 className="text-xl font-black tracking-normal">Video slots</h3>
             <div className="grid gap-3 sm:grid-cols-3">
               {videoItems.map((video) => (
                 <button
@@ -453,6 +573,7 @@ function AdminPanel({
               {saving ? "Saving..." : "Save changes live"}
             </button>
           </form>
+          </div>
         )}
       </div>
     </div>
@@ -464,11 +585,23 @@ export default function App() {
   const [adminOpen, setAdminOpen] = useState(false);
   const [adminUnlocked, setAdminUnlocked] = useState(false);
   const [activeVideo, setActiveVideo] = useState(null);
+  const [siteSettings, setSiteSettings] = useState(defaultSiteSettings);
   const [videoItems, setVideoItems] = useState(defaultVideoSlots);
   const [storageMessage, setStorageMessage] = useState("");
+  const bioParagraphs = getBioParagraphs(siteSettings.bio);
 
   useEffect(() => {
     let mounted = true;
+
+    fetch("/api/site-settings", { cache: "no-store" })
+      .then((response) => response.json())
+      .then((data) => {
+        if (!mounted) return;
+        if (data.settings) setSiteSettings(data.settings);
+      })
+      .catch(() => {
+        if (mounted) setSiteSettings(defaultSiteSettings);
+      });
 
     fetch("/api/videos", { cache: "no-store" })
       .then((response) => response.json())
@@ -548,30 +681,53 @@ export default function App() {
     return data.addedId;
   }
 
+  async function handleSettingsSave({ bio, handle, name, password, tagline }) {
+    const response = await fetch("/api/site-settings", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        bio,
+        handle,
+        name,
+        password,
+        tagline,
+      }),
+    });
+
+    const data = await response.json();
+    if (!response.ok) {
+      throw new Error(data.error || "Could not save account text.");
+    }
+
+    setSiteSettings(data.settings || defaultSiteSettings);
+  }
+
   function openAdmin() {
     setAdminUnlocked(false);
     setAdminOpen(true);
   }
 
   return (
-    <main className="min-h-screen overflow-hidden bg-[#fff8df] text-neutral-950">
-      <section className="relative px-5 py-12 sm:px-8 sm:py-14 lg:px-10 lg:py-16">
-        <div className="pointer-events-none absolute left-0 top-0 h-56 w-56 -translate-x-1/2 -translate-y-1/2 rounded-full bg-yellow-400/30 blur-3xl" />
-        <div className="pointer-events-none absolute bottom-10 right-0 h-64 w-64 translate-x-1/3 rounded-full bg-yellow-500/25 blur-3xl" />
+    <main className="min-h-screen overflow-hidden bg-black text-yellow-300">
+      <section className="relative bg-black px-5 py-12 text-yellow-300 sm:px-8 sm:py-14 lg:px-10 lg:py-16">
+        <div className="pointer-events-none absolute left-0 top-0 h-56 w-56 -translate-x-1/2 -translate-y-1/2 rounded-full bg-yellow-400/20 blur-3xl" />
+        <div className="pointer-events-none absolute bottom-10 right-0 h-64 w-64 translate-x-1/3 rounded-full bg-yellow-500/15 blur-3xl" />
 
         <div className="mx-auto grid w-full max-w-6xl gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
           <div className="animate-rise-in text-center lg:text-left">
-            <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-neutral-950/15 bg-white/55 px-4 py-2 text-sm font-semibold text-neutral-800 shadow-sm">
+            <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-yellow-300/35 bg-yellow-300 px-4 py-2 text-sm font-black text-black shadow-sm">
               <Sparkles size={16} color={accent} />
-              <span>@brave_spark_</span>
+              <span>{siteSettings.handle}</span>
             </div>
 
-            <h1 className="mx-auto max-w-4xl text-balance text-5xl font-black leading-[0.95] tracking-normal text-neutral-950 sm:text-6xl md:text-7xl lg:mx-0">
-              Brave Spark
+            <h1 className="mx-auto max-w-4xl text-balance text-5xl font-black leading-[0.95] tracking-normal text-yellow-300 sm:text-6xl md:text-7xl lg:mx-0">
+              {siteSettings.name}
             </h1>
 
-            <p className="mx-auto mt-5 max-w-xl text-balance text-xl font-semibold leading-8 text-neutral-700 sm:text-2xl lg:mx-0">
-              Motivation, mindset, and real-life growth with a human punch.
+            <p className="mx-auto mt-5 max-w-xl text-balance text-xl font-semibold leading-8 text-yellow-100 sm:text-2xl lg:mx-0">
+              {siteSettings.tagline}
             </p>
 
             <div className="mx-auto mt-8 grid max-w-md gap-3 sm:grid-cols-2 lg:mx-0">
@@ -582,7 +738,7 @@ export default function App() {
           </div>
 
           <div className="animate-rise-in mx-auto w-full [animation-delay:120ms]">
-            <div className="relative rounded-[28px] border border-neutral-950/15 bg-white p-3 shadow-[0_24px_70px_rgba(23,23,23,0.15)]">
+            <div className="relative rounded-[28px] border border-yellow-300/55 bg-yellow-300 p-3 shadow-[0_24px_90px_rgba(245,183,0,0.18)]">
               {profilePhotoUrl ? (
                 <img
                   src={profilePhotoUrl}
@@ -604,10 +760,10 @@ export default function App() {
         </div>
       </section>
 
-      <section className="px-5 pb-14 sm:px-8 lg:px-10">
+      <section className="bg-black px-5 pb-14 sm:px-8 lg:px-10">
         <div className="mx-auto max-w-3xl">
-          <article className="animate-rise-in rounded-[8px] border border-neutral-950/15 bg-white/70 p-6 shadow-[0_14px_45px_rgba(23,23,23,0.07)] [animation-delay:220ms] sm:p-8">
-            <div className="space-y-5 text-lg font-medium leading-8 text-neutral-800">
+          <article className="animate-rise-in rounded-[8px] border border-yellow-300/35 bg-yellow-300/8 p-6 shadow-[0_20px_70px_rgba(245,183,0,0.08)] [animation-delay:220ms] sm:p-8">
+            <div className="space-y-5 text-lg font-semibold leading-8 text-yellow-100">
               {bioParagraphs.map((paragraph) => (
                 <p key={paragraph}>{paragraph}</p>
               ))}
@@ -647,8 +803,8 @@ export default function App() {
         </div>
       </section>
 
-      <footer className="px-5 pb-8 text-center text-sm font-semibold text-neutral-600 sm:px-8">
-        Brave Spark · {year} ·{" "}
+      <footer className="bg-black px-5 pb-8 text-center text-sm font-semibold text-yellow-300 sm:px-8">
+        {siteSettings.name} · {year} ·{" "}
         <button
           type="button"
           onClick={openAdmin}
@@ -664,6 +820,8 @@ export default function App() {
           onClose={() => setAdminOpen(false)}
           onAdd={handleAddVideoSlot}
           onSave={handleVideoSave}
+          onSaveSettings={handleSettingsSave}
+          settings={siteSettings}
           setUnlocked={setAdminUnlocked}
           unlocked={adminUnlocked}
           videoItems={videoItems}
