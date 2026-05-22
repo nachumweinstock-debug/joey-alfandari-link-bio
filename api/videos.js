@@ -34,7 +34,7 @@ module.exports = async function handler(request, response) {
           ...current,
           {
             id: nextId,
-            eyebrow: "Video",
+            eyebrow: "",
             title: `New video ${nextId}`,
             poster: "",
             src: "",
@@ -53,10 +53,7 @@ module.exports = async function handler(request, response) {
         slot.id === slotId
           ? {
               ...slot,
-              eyebrow:
-                typeof eyebrow === "string" && eyebrow.trim()
-                  ? eyebrow.trim()
-                  : slot.eyebrow,
+              eyebrow: typeof eyebrow === "string" ? eyebrow.trim() : slot.eyebrow,
               poster: typeof poster === "string" ? poster : slot.poster,
               src: typeof src === "string" ? src : slot.src,
               title:

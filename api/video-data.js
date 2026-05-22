@@ -3,21 +3,21 @@ const manifestPath = "brave-spark/videos-manifest.json";
 const defaultVideoSlots = [
   {
     id: 1,
-    eyebrow: "Intro Reel",
+    eyebrow: "",
     title: "Upload video one",
     poster: "",
     src: "",
   },
   {
     id: 2,
-    eyebrow: "Featured Reel",
+    eyebrow: "",
     title: "Motivation that hits",
     poster: "",
     src: "",
   },
   {
     id: 3,
-    eyebrow: "Story Clip",
+    eyebrow: "",
     title: "Real talk, sharp cut",
     poster: "",
     src: "",
@@ -37,7 +37,7 @@ function mergeManifest(records = []) {
   const extraSlots = records
     .filter((item) => !defaultVideoSlots.some((slot) => slot.id === Number(item.id)))
     .map((item) => ({
-      eyebrow: "Video",
+      eyebrow: "",
       title: "New video",
       poster: "",
       src: "",

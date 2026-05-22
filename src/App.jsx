@@ -248,7 +248,7 @@ function AdminPanel({
       const nextTitle = title.trim() || selectedVideo?.title || `Video ${selectedId}`;
 
       await onSave({
-        eyebrow: selectedVideo?.eyebrow || eyebrow || `Video ${selectedId}`,
+        eyebrow: "",
         file,
         id: selectedId,
         password,
@@ -496,7 +496,7 @@ export default function App() {
         handleUploadUrl: "/api/blob-upload",
         multipart: true,
         clientPayload: JSON.stringify({
-          eyebrow,
+          eyebrow: "",
           id,
           password,
           title,
@@ -511,7 +511,7 @@ export default function App() {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        eyebrow,
+        eyebrow: "",
         id,
         password,
         poster,
