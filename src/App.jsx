@@ -51,21 +51,21 @@ function isAdminPassword(value) {
 const defaultVideoSlots = [
   {
     id: 1,
-    eyebrow: "Intro Reel",
+    eyebrow: "",
     title: "Upload video one",
     poster: "",
     src: "",
   },
   {
     id: 2,
-    eyebrow: "Featured Reel",
+    eyebrow: "",
     title: "Motivation that hits",
     poster: "",
     src: "",
   },
   {
     id: 3,
-    eyebrow: "Story Clip",
+    eyebrow: "",
     title: "Real talk, sharp cut",
     poster: "",
     src: "",
@@ -82,7 +82,7 @@ function LinkCard({ href, icon: Icon, label, variant = "light" }) {
       rel="noreferrer"
       className={`group flex min-h-[70px] items-center justify-between rounded-[8px] border px-5 py-4 text-left shadow-[0_12px_35px_rgba(23,23,23,0.06)] backdrop-blur transition duration-300 hover:-translate-y-1 hover:shadow-[0_18px_45px_rgba(23,23,23,0.12)] focus:outline-none focus:ring-4 focus:ring-yellow-500/30 ${
         isDark
-          ? "border-neutral-950 bg-neutral-950 text-yellow-300 hover:bg-neutral-900"
+          ? "border-neutral-950 bg-black text-yellow-300 hover:bg-black"
           : "border-neutral-900/15 bg-white/75 text-neutral-950 hover:border-neutral-950 hover:bg-white"
       }`}
     >
@@ -108,7 +108,7 @@ function LinkCard({ href, icon: Icon, label, variant = "light" }) {
   );
 }
 
-function IPhoneVideo({ eyebrow, onOpen, poster, src, title }) {
+function IPhoneVideo({ onOpen, poster, src, title }) {
   return (
     <article className="group">
       <div className="mx-auto w-full max-w-[320px] rounded-[46px] bg-neutral-950 p-3 shadow-[0_30px_80px_rgba(23,23,23,0.28)] transition duration-300 group-hover:-translate-y-2">
@@ -148,10 +148,7 @@ function IPhoneVideo({ eyebrow, onOpen, poster, src, title }) {
         </div>
       </div>
       <div className="mx-auto mt-5 max-w-[320px]">
-        <p className="text-xs font-black uppercase tracking-[0.18em] text-neutral-950/55">
-          {eyebrow}
-        </p>
-        <h3 className="mt-2 text-2xl font-black leading-tight tracking-normal text-neutral-950">
+        <h3 className="text-2xl font-black leading-tight tracking-normal text-neutral-950">
           {title}
         </h3>
       </div>
@@ -302,9 +299,9 @@ function AdminPanel({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-neutral-950/55 p-4 backdrop-blur-sm sm:items-center">
-      <div className="w-full max-w-xl rounded-[12px] border border-neutral-950/15 bg-[#fff8df] p-5 shadow-[0_30px_100px_rgba(0,0,0,0.35)] sm:p-6">
-        <div className="mb-5 flex items-center justify-between gap-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-neutral-950/55 p-3 backdrop-blur-sm sm:p-6">
+      <div className="max-h-[calc(100vh-24px)] w-full max-w-xl overflow-y-auto rounded-[12px] border border-neutral-950/15 bg-[#fff8df] p-5 shadow-[0_30px_100px_rgba(0,0,0,0.35)] sm:max-h-[calc(100vh-48px)] sm:p-6">
+        <div className="sticky -top-5 z-10 mb-5 flex items-center justify-between gap-4 border-b border-neutral-950/10 bg-[#fff8df] pb-4 pt-1 sm:-top-6">
           <div>
             <p className="text-xs font-black uppercase tracking-[0.18em] text-yellow-700">
               Admin
@@ -375,7 +372,7 @@ function AdminPanel({
               {adding ? "Adding..." : "Add iPhone"}
             </button>
 
-            <div className="rounded-[8px] border border-neutral-950/15 bg-white/80 p-4 text-sm font-bold text-neutral-800">
+            <div className="rounded-[8px] border border-neutral-950/15 bg-white/80 p-3 text-sm font-bold text-neutral-800">
               Editing <span className="text-yellow-800">iPhone {selectedId}</span>
             </div>
 
@@ -413,7 +410,7 @@ function AdminPanel({
                   src={filePreviewUrl}
                   controls
                   playsInline
-                  className="mx-auto aspect-[9/16] max-h-[320px] rounded-[8px] bg-black object-contain"
+                  className="mx-auto aspect-[9/16] max-h-[240px] rounded-[8px] bg-black object-contain sm:max-h-[300px]"
                 />
                 <button
                   type="button"
