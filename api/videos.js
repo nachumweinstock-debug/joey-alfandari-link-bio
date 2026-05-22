@@ -15,7 +15,7 @@ module.exports = async function handler(request, response) {
     }
 
     if (request.method === "POST") {
-      const { action, eyebrow, id, password, src, title } = request.body || {};
+      const { action, eyebrow, id, password, poster, src, title } = request.body || {};
 
       if (password !== adminPassword) {
         return response.status(401).json({ error: "Unauthorized" });
@@ -32,6 +32,7 @@ module.exports = async function handler(request, response) {
             id: nextId,
             eyebrow: "Video",
             title: `New video ${nextId}`,
+            poster: "",
             src: "",
           },
         ];
@@ -49,6 +50,7 @@ module.exports = async function handler(request, response) {
           ? {
               ...slot,
               eyebrow: eyebrow || slot.eyebrow,
+              poster: typeof poster === "string" ? poster : slot.poster,
               src: typeof src === "string" ? src : slot.src,
               title: title || slot.title,
             }

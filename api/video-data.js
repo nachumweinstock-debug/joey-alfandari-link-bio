@@ -5,18 +5,21 @@ const defaultVideoSlots = [
     id: 1,
     eyebrow: "Intro Reel",
     title: "Upload video one",
+    poster: "",
     src: "",
   },
   {
     id: 2,
     eyebrow: "Featured Reel",
     title: "Motivation that hits",
+    poster: "",
     src: "",
   },
   {
     id: 3,
     eyebrow: "Story Clip",
     title: "Real talk, sharp cut",
+    poster: "",
     src: "",
   },
 ];
@@ -36,6 +39,7 @@ function mergeManifest(records = []) {
     .map((item) => ({
       eyebrow: "Video",
       title: "New video",
+      poster: "",
       src: "",
       ...item,
       id: Number(item.id),

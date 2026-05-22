@@ -1,11 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { upload } from "@vercel/blob/client";
 import {
   ArrowUpRight,
   Clapperboard,
   Instagram,
   Lock,
-  Mail,
   Maximize2,
   Play,
   Save,
@@ -21,10 +20,10 @@ const profilePhotoUrl = "/joey-profile.jpg";
 
 // SWAP THIS: Replace with Joey's real bio copy.
 const bioParagraphs = [
-  "Hey! I'm Brave Spark, a 43-year-old content creator from New York, USA, focused on motivation, mindset, and real-life growth.",
-  "I create content that goes beyond just inspiration, content that makes people feel seen, challenged, and understood. My approach blends storytelling, humor, vulnerability, and powerful messages to create videos that connect on a human level and leave a lasting impact.",
-  "Whether it's through relatable moments, cinematic visuals, or honest conversations, my goal is simple: to remind people that being brave doesn't mean having it all together, it means showing up anyway.",
-  "Let's create content that feels real, sparks emotion, and inspires people to become stronger versions of themselves.",
+  "I'm Brave Spark, a Long Island, New York creator making motivation feel human again.",
+  "My work mixes storytelling, humor, vulnerability, and sharp real-life messages for people who want more than empty inspiration.",
+  "Brave does not mean polished. Brave means showing up, telling the truth, and turning real moments into content that actually lands.",
+  "If it feels honest, cinematic, and a little uncomfortable in the right way, that's the spark.",
 ];
 
 // SWAP THESE: Replace href values with Joey's actual links.
@@ -33,11 +32,6 @@ const links = [
     label: "Instagram",
     href: "https://www.instagram.com/brave_spark_/",
     icon: Instagram,
-  },
-  {
-    label: "Contact",
-    href: "mailto:Bravesparkinsta@gmail.com",
-    icon: Mail,
   },
 ];
 
@@ -48,18 +42,21 @@ const defaultVideoSlots = [
     id: 1,
     eyebrow: "Intro Reel",
     title: "Upload video one",
+    poster: "",
     src: "",
   },
   {
     id: 2,
     eyebrow: "Featured Reel",
     title: "Motivation that hits",
+    poster: "",
     src: "",
   },
   {
     id: 3,
     eyebrow: "Story Clip",
     title: "Real talk, sharp cut",
+    poster: "",
     src: "",
   },
 ];
@@ -86,7 +83,7 @@ function LinkCard({ href, icon: Icon, label }) {
   );
 }
 
-function IPhoneVideo({ eyebrow, onOpen, src, title }) {
+function IPhoneVideo({ eyebrow, onOpen, poster, src, title }) {
   return (
     <article className="group">
       <div className="mx-auto w-full max-w-[320px] rounded-[46px] bg-neutral-950 p-3 shadow-[0_30px_80px_rgba(23,23,23,0.28)] transition duration-300 group-hover:-translate-y-2">
@@ -97,6 +94,7 @@ function IPhoneVideo({ eyebrow, onOpen, src, title }) {
               <div className="relative h-full bg-black">
                 <video
                   src={src}
+                  poster={poster || undefined}
                   controls
                   playsInline
                   preload="metadata"
@@ -112,7 +110,10 @@ function IPhoneVideo({ eyebrow, onOpen, src, title }) {
                 </button>
               </div>
             ) : (
-              <div className="flex h-full items-center justify-center bg-[radial-gradient(circle_at_30%_18%,#fff0a3_0%,#f5b700_28%,#161616_72%)] text-neutral-950">
+              <div
+                className="flex h-full items-center justify-center bg-[radial-gradient(circle_at_30%_18%,#fff0a3_0%,#f5b700_28%,#161616_72%)] bg-cover bg-center text-neutral-950"
+                style={poster ? { backgroundImage: `url(${poster})` } : undefined}
+              >
                 <div className="flex size-20 items-center justify-center rounded-full bg-white/95 shadow-[0_18px_45px_rgba(0,0,0,0.3)]">
                   <Play size={34} fill="currentColor" />
                 </div>
@@ -149,6 +150,7 @@ function VideoLightbox({ onClose, video }) {
       <div className="h-full max-h-[88vh] w-full max-w-5xl">
         <video
           src={video.src}
+          poster={video.poster || undefined}
           controls
           autoPlay
           playsInline
@@ -167,6 +169,7 @@ function AdminPanel({
   setUnlocked,
   videoItems,
 }) {
+  const frameVideoRef = useRef(null);
   const [password, setPassword] = useState("");
   const [passwordError, setPasswordError] = useState("");
   const [selectedId, setSelectedId] = useState(1);
@@ -174,6 +177,8 @@ function AdminPanel({
   const [eyebrow, setEyebrow] = useState(selectedVideo?.eyebrow || "");
   const [title, setTitle] = useState(selectedVideo?.title || "");
   const [file, setFile] = useState(null);
+  const [filePreviewUrl, setFilePreviewUrl] = useState("");
+  const [poster, setPoster] = useState(selectedVideo?.poster || "");
   const [adding, setAdding] = useState(false);
   const [saved, setSaved] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -183,9 +188,22 @@ function AdminPanel({
     setEyebrow(selectedVideo?.eyebrow || "");
     setTitle(selectedVideo?.title || "");
     setFile(null);
+    setPoster(selectedVideo?.poster || "");
     setSaved(false);
     setSaveError("");
-  }, [selectedId, selectedVideo?.eyebrow, selectedVideo?.title]);
+  }, [selectedId, selectedVideo?.eyebrow, selectedVideo?.poster, selectedVideo?.title]);
+
+  useEffect(() => {
+    if (!file) {
+      setFilePreviewUrl("");
+      return undefined;
+    }
+
+    const nextUrl = URL.createObjectURL(file);
+    setFilePreviewUrl(nextUrl);
+
+    return () => URL.revokeObjectURL(nextUrl);
+  }, [file]);
 
   function handlePasswordSubmit(event) {
     event.preventDefault();
@@ -210,6 +228,7 @@ function AdminPanel({
         file,
         id: selectedId,
         password,
+        poster,
         title,
       });
       setSaved(true);
@@ -219,6 +238,24 @@ function AdminPanel({
     } finally {
       setSaving(false);
     }
+  }
+
+  function captureCurrentFrame() {
+    const video = frameVideoRef.current;
+    if (!video || !video.videoWidth || !video.videoHeight) {
+      setSaveError("Load the video first, then choose a frame.");
+      return;
+    }
+
+    const canvas = document.createElement("canvas");
+    const maxWidth = 720;
+    const scale = Math.min(1, maxWidth / video.videoWidth);
+    canvas.width = Math.round(video.videoWidth * scale);
+    canvas.height = Math.round(video.videoHeight * scale);
+    const context = canvas.getContext("2d");
+    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+    setPoster(canvas.toDataURL("image/jpeg", 0.82));
+    setSaveError("");
   }
 
   async function handleAddSlot() {
@@ -344,10 +381,45 @@ function AdminPanel({
               <input
                 type="file"
                 accept="video/*"
-                onChange={(event) => setFile(event.target.files?.[0] || null)}
+                onChange={(event) => {
+                  setFile(event.target.files?.[0] || null);
+                  setPoster("");
+                }}
                 className="sr-only"
               />
             </label>
+
+            {filePreviewUrl ? (
+              <div className="rounded-[8px] border border-neutral-950/15 bg-white/80 p-4">
+                <video
+                  ref={frameVideoRef}
+                  src={filePreviewUrl}
+                  controls
+                  playsInline
+                  className="mx-auto aspect-[9/16] max-h-[320px] rounded-[8px] bg-black object-contain"
+                />
+                <button
+                  type="button"
+                  onClick={captureCurrentFrame}
+                  className="mt-3 w-full rounded-[8px] bg-yellow-300 px-4 py-3 font-black text-neutral-950 transition hover:-translate-y-0.5"
+                >
+                  Use Current Frame as Thumbnail
+                </button>
+              </div>
+            ) : null}
+
+            {poster ? (
+              <div className="rounded-[8px] border border-neutral-950/15 bg-white/80 p-4">
+                <p className="mb-3 text-sm font-black text-neutral-800">
+                  Thumbnail
+                </p>
+                <img
+                  src={poster}
+                  alt="Selected video thumbnail"
+                  className="h-28 w-full rounded-[8px] object-cover"
+                />
+              </div>
+            ) : null}
 
             {saved ? (
               <p className="text-sm font-bold text-green-700">
@@ -400,7 +472,7 @@ export default function App() {
     };
   }, []);
 
-  async function handleVideoSave({ eyebrow, file, id, password, title }) {
+  async function handleVideoSave({ eyebrow, file, id, password, poster, title }) {
     let uploadedUrl;
 
     if (file) {
@@ -428,6 +500,7 @@ export default function App() {
         eyebrow,
         id,
         password,
+        poster,
         src: uploadedUrl,
         title,
       }),
