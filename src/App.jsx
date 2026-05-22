@@ -89,7 +89,7 @@ function LinkCard({ href, icon: Icon, label }) {
 function IPhoneVideo({ eyebrow, onOpen, src, title }) {
   return (
     <article className="group">
-      <div className="mx-auto w-full max-w-[280px] rounded-[42px] bg-neutral-950 p-3 shadow-[0_30px_80px_rgba(23,23,23,0.28)] transition duration-300 group-hover:-translate-y-2">
+      <div className="mx-auto w-full max-w-[320px] rounded-[46px] bg-neutral-950 p-3 shadow-[0_30px_80px_rgba(23,23,23,0.28)] transition duration-300 group-hover:-translate-y-2">
         <div className="relative overflow-hidden rounded-[32px] bg-neutral-900">
           <div className="absolute left-1/2 top-0 z-20 h-6 w-28 -translate-x-1/2 rounded-b-2xl bg-neutral-950" />
           <div className="aspect-[9/16]">
@@ -121,7 +121,7 @@ function IPhoneVideo({ eyebrow, onOpen, src, title }) {
           </div>
         </div>
       </div>
-      <div className="mx-auto mt-5 max-w-[280px]">
+      <div className="mx-auto mt-5 max-w-[320px]">
         <p className="text-xs font-black uppercase tracking-[0.18em] text-neutral-950/55">
           {eyebrow}
         </p>
@@ -161,6 +161,7 @@ function VideoLightbox({ onClose, video }) {
 
 function AdminPanel({
   onClose,
+  onAdd,
   onSave,
   unlocked,
   setUnlocked,
@@ -173,6 +174,7 @@ function AdminPanel({
   const [eyebrow, setEyebrow] = useState(selectedVideo?.eyebrow || "");
   const [title, setTitle] = useState(selectedVideo?.title || "");
   const [file, setFile] = useState(null);
+  const [adding, setAdding] = useState(false);
   const [saved, setSaved] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState("");
@@ -216,6 +218,21 @@ function AdminPanel({
       setSaveError(error?.message || "Save failed.");
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function handleAddSlot() {
+    setAdding(true);
+    setSaveError("");
+    setSaved(false);
+
+    try {
+      const addedId = await onAdd(password);
+      setSelectedId(addedId);
+    } catch (error) {
+      setSaveError(error?.message || "Could not add iPhone.");
+    } finally {
+      setAdding(false);
     }
   }
 
@@ -284,6 +301,14 @@ function AdminPanel({
                 </button>
               ))}
             </div>
+            <button
+              type="button"
+              onClick={handleAddSlot}
+              disabled={adding}
+              className="flex w-full items-center justify-center gap-2 rounded-[8px] border border-neutral-950/20 bg-white px-5 py-3 font-black text-neutral-950 transition hover:-translate-y-0.5 hover:border-neutral-950 disabled:opacity-60"
+            >
+              {adding ? "Adding..." : "Add iPhone"}
+            </button>
 
             <div className="rounded-[8px] border border-neutral-950/15 bg-white/80 p-4 text-sm font-bold text-neutral-800">
               Uploading to <span className="text-yellow-800">Slot {selectedId}</span>
@@ -359,7 +384,7 @@ export default function App() {
   useEffect(() => {
     let mounted = true;
 
-    fetch("/api/videos")
+    fetch("/api/videos", { cache: "no-store" })
       .then((response) => response.json())
       .then((data) => {
         if (!mounted) return;
@@ -375,19 +400,12 @@ export default function App() {
     };
   }, []);
 
-  async function refreshVideos() {
-    const response = await fetch("/api/videos");
-    const data = await response.json();
-    if (!response.ok) {
-      throw new Error(data.error || "Could not refresh videos.");
-    }
-    setVideoItems(data.videos || defaultVideoSlots);
-  }
-
   async function handleVideoSave({ eyebrow, file, id, password, title }) {
+    let uploadedUrl;
+
     if (file) {
       const safeName = file.name.replace(/[^a-z0-9._-]/gi, "-").toLowerCase();
-      await upload(`brave-spark/videos/slot-${id}-${safeName}`, file, {
+      const blob = await upload(`brave-spark/videos/slot-${id}-${safeName}`, file, {
         access: "public",
         handleUploadUrl: "/api/blob-upload",
         multipart: true,
@@ -398,9 +416,7 @@ export default function App() {
           title,
         }),
       });
-
-      await refreshVideos();
-      return;
+      uploadedUrl = blob.url;
     }
 
     const response = await fetch("/api/videos", {
@@ -412,6 +428,7 @@ export default function App() {
         eyebrow,
         id,
         password,
+        src: uploadedUrl,
         title,
       }),
     });
@@ -421,6 +438,27 @@ export default function App() {
       throw new Error(data.error || "Could not save video.");
     }
     setVideoItems(data.videos || defaultVideoSlots);
+  }
+
+  async function handleAddVideoSlot(password) {
+    const response = await fetch("/api/videos", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        action: "add",
+        password,
+      }),
+    });
+
+    const data = await response.json();
+    if (!response.ok) {
+      throw new Error(data.error || "Could not add iPhone.");
+    }
+
+    setVideoItems(data.videos || defaultVideoSlots);
+    return data.addedId;
   }
 
   function openAdmin() {
@@ -540,6 +578,7 @@ export default function App() {
       {adminOpen ? (
         <AdminPanel
           onClose={() => setAdminOpen(false)}
+          onAdd={handleAddVideoSlot}
           onSave={handleVideoSave}
           setUnlocked={setAdminUnlocked}
           unlocked={adminUnlocked}

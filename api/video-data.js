@@ -22,7 +22,7 @@ const defaultVideoSlots = [
 ];
 
 function mergeManifest(records = []) {
-  return defaultVideoSlots.map((slot) => {
+  const baseSlots = defaultVideoSlots.map((slot) => {
     const record = records.find((item) => Number(item.id) === slot.id);
     return {
       ...slot,
@@ -30,6 +30,19 @@ function mergeManifest(records = []) {
       id: slot.id,
     };
   });
+
+  const extraSlots = records
+    .filter((item) => !defaultVideoSlots.some((slot) => slot.id === Number(item.id)))
+    .map((item) => ({
+      eyebrow: "Video",
+      title: "New video",
+      src: "",
+      ...item,
+      id: Number(item.id),
+    }))
+    .sort((a, b) => a.id - b.id);
+
+  return [...baseSlots, ...extraSlots];
 }
 
 async function readManifest() {
@@ -40,7 +53,8 @@ async function readManifest() {
     if (!result?.stream) return defaultVideoSlots;
 
     const text = await new Response(result.stream).text();
-    return mergeManifest(JSON.parse(text));
+    const parsed = JSON.parse(text);
+    return mergeManifest(Array.isArray(parsed) ? parsed : []);
   } catch (error) {
     if (error?.message?.includes("No token")) throw error;
     return defaultVideoSlots;

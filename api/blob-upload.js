@@ -16,7 +16,8 @@ module.exports = async function handler(request, response) {
         }
 
         const slotId = Number(payload.id);
-        if (![1, 2, 3].includes(slotId)) {
+        const current = await readManifest();
+        if (!current.some((slot) => slot.id === slotId)) {
           throw new Error("Invalid slot");
         }
 

@@ -10,27 +10,46 @@ module.exports = async function handler(request, response) {
   try {
     if (request.method === "GET") {
       const videos = await readManifest();
+      response.setHeader("Cache-Control", "no-store");
       return response.status(200).json({ storage: "blob", videos });
     }
 
     if (request.method === "POST") {
-      const { eyebrow, id, password, title } = request.body || {};
+      const { action, eyebrow, id, password, src, title } = request.body || {};
 
       if (password !== adminPassword) {
         return response.status(401).json({ error: "Unauthorized" });
       }
 
+      const current = await readManifest();
+
+      if (action === "add") {
+        const nextId =
+          current.reduce((max, slot) => Math.max(max, Number(slot.id) || 0), 0) + 1;
+        const next = [
+          ...current,
+          {
+            id: nextId,
+            eyebrow: "Video",
+            title: `New video ${nextId}`,
+            src: "",
+          },
+        ];
+        const videos = await writeManifest(next);
+        return response.status(200).json({ addedId: nextId, storage: "blob", videos });
+      }
+
       const slotId = Number(id);
-      if (![1, 2, 3].includes(slotId)) {
+      if (!current.some((slot) => slot.id === slotId)) {
         return response.status(400).json({ error: "Invalid slot" });
       }
 
-      const current = await readManifest();
       const next = current.map((slot) =>
         slot.id === slotId
           ? {
               ...slot,
               eyebrow: eyebrow || slot.eyebrow,
+              src: typeof src === "string" ? src : slot.src,
               title: title || slot.title,
             }
           : slot
