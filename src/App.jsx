@@ -5,6 +5,7 @@ import {
   Clapperboard,
   Instagram,
   Lock,
+  Mail,
   Maximize2,
   Play,
   Save,
@@ -32,6 +33,12 @@ const links = [
     label: "Instagram",
     href: "https://www.instagram.com/brave_spark_/",
     icon: Instagram,
+  },
+  {
+    label: "Contact",
+    href: "https://docs.google.com/forms/d/e/1FAIpQLSc_jZ6p4xNrtJxUqtxWcUkvZHlnmYXX48O3-wG4J_oe5H0Oug/viewform?usp=publish-editor",
+    icon: Mail,
+    variant: "dark",
   },
 ];
 
@@ -65,23 +72,37 @@ const defaultVideoSlots = [
   },
 ];
 
-function LinkCard({ href, icon: Icon, label }) {
+function LinkCard({ href, icon: Icon, label, variant = "light" }) {
+  const isDark = variant === "dark";
+
   return (
     <a
       href={href}
-      className="group flex min-h-[70px] items-center justify-between rounded-[8px] border border-neutral-900/15 bg-white/75 px-5 py-4 text-left shadow-[0_12px_35px_rgba(23,23,23,0.06)] backdrop-blur transition duration-300 hover:-translate-y-1 hover:border-neutral-950 hover:bg-white hover:shadow-[0_18px_45px_rgba(23,23,23,0.12)] focus:outline-none focus:ring-4 focus:ring-yellow-500/30"
+      target="_blank"
+      rel="noreferrer"
+      className={`group flex min-h-[70px] items-center justify-between rounded-[8px] border px-5 py-4 text-left shadow-[0_12px_35px_rgba(23,23,23,0.06)] backdrop-blur transition duration-300 hover:-translate-y-1 hover:shadow-[0_18px_45px_rgba(23,23,23,0.12)] focus:outline-none focus:ring-4 focus:ring-yellow-500/30 ${
+        isDark
+          ? "border-neutral-950 bg-neutral-950 text-yellow-300 hover:bg-neutral-900"
+          : "border-neutral-900/15 bg-white/75 text-neutral-950 hover:border-neutral-950 hover:bg-white"
+      }`}
     >
       <span className="flex items-center gap-4">
-        <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-neutral-950 text-yellow-400 transition duration-300 group-hover:rotate-[-8deg] group-hover:scale-105">
+        <span
+          className={`flex size-11 shrink-0 items-center justify-center rounded-full transition duration-300 group-hover:rotate-[-8deg] group-hover:scale-105 ${
+            isDark ? "bg-yellow-300 text-neutral-950" : "bg-neutral-950 text-yellow-400"
+          }`}
+        >
           <Icon size={20} strokeWidth={2.2} />
         </span>
-        <span className="text-base font-semibold tracking-[0.01em] text-neutral-950 sm:text-lg">
+        <span className="text-base font-semibold tracking-[0.01em] sm:text-lg">
           {label}
         </span>
       </span>
       <ArrowUpRight
         size={22}
-        className="text-neutral-950 transition duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-yellow-700"
+        className={`transition duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 ${
+          isDark ? "text-yellow-300" : "text-neutral-950 group-hover:text-yellow-700"
+        }`}
       />
     </a>
   );
@@ -227,14 +248,17 @@ function AdminPanel({
     setSaved(false);
 
     try {
+      const nextTitle = title.trim() || selectedVideo?.title || `Video ${selectedId}`;
+
       await onSave({
-        eyebrow,
+        eyebrow: selectedVideo?.eyebrow || eyebrow || `Video ${selectedId}`,
         file,
         id: selectedId,
         password,
         poster,
-        title,
+        title: nextTitle,
       });
+      setTitle(nextTitle);
       setSaved(true);
       setFile(null);
     } catch (error) {
@@ -352,29 +376,18 @@ function AdminPanel({
             </button>
 
             <div className="rounded-[8px] border border-neutral-950/15 bg-white/80 p-4 text-sm font-bold text-neutral-800">
-              Uploading to <span className="text-yellow-800">Slot {selectedId}</span>
+              Editing <span className="text-yellow-800">iPhone {selectedId}</span>
             </div>
 
             <label className="block">
               <span className="mb-2 block text-sm font-black text-neutral-800">
-                Small label
-              </span>
-              <input
-                type="text"
-                value={eyebrow}
-                onChange={(event) => setEyebrow(event.target.value)}
-                className="w-full rounded-[8px] border border-neutral-950/20 bg-white px-4 py-3 font-bold outline-none transition focus:border-neutral-950 focus:ring-4 focus:ring-yellow-500/25"
-              />
-            </label>
-
-            <label className="block">
-              <span className="mb-2 block text-sm font-black text-neutral-800">
-                Title
+                Video title
               </span>
               <input
                 type="text"
                 value={title}
                 onChange={(event) => setTitle(event.target.value)}
+                placeholder="Type the title that shows under this iPhone"
                 className="w-full rounded-[8px] border border-neutral-950/20 bg-white px-4 py-3 font-bold outline-none transition focus:border-neutral-950 focus:ring-4 focus:ring-yellow-500/25"
               />
             </label>
@@ -427,7 +440,7 @@ function AdminPanel({
 
             {saved ? (
               <p className="text-sm font-bold text-green-700">
-                Saved live for everyone.
+                Title and video saved live.
               </p>
             ) : null}
             {saveError ? (
@@ -440,7 +453,7 @@ function AdminPanel({
               className="flex w-full items-center justify-center gap-2 rounded-[8px] bg-neutral-950 px-5 py-4 font-black text-white transition hover:bg-neutral-800"
             >
               <Save size={18} className="text-yellow-300" />
-              {saving ? "Saving..." : `Save Slot ${selectedId}`}
+              {saving ? "Saving..." : "Save changes live"}
             </button>
           </form>
         )}

@@ -53,10 +53,16 @@ module.exports = async function handler(request, response) {
         slot.id === slotId
           ? {
               ...slot,
-              eyebrow: eyebrow || slot.eyebrow,
+              eyebrow:
+                typeof eyebrow === "string" && eyebrow.trim()
+                  ? eyebrow.trim()
+                  : slot.eyebrow,
               poster: typeof poster === "string" ? poster : slot.poster,
               src: typeof src === "string" ? src : slot.src,
-              title: title || slot.title,
+              title:
+                typeof title === "string" && title.trim()
+                  ? title.trim()
+                  : slot.title,
             }
           : slot
       );
