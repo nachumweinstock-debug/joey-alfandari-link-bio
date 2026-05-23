@@ -71,6 +71,20 @@ module.exports = async function handler(request, response) {
         return response.status(200).json({ addedId: nextId, storage: "blob", videos });
       }
 
+      if (action === "normalize-posters") {
+        const next = await Promise.all(
+          current.map(async (slot) => ({
+            ...slot,
+            poster:
+              typeof slot.poster === "string"
+                ? await storePosterIfNeeded(slot.poster, slot.id)
+                : slot.poster,
+          }))
+        );
+        const videos = await writeManifest(next);
+        return response.status(200).json({ storage: "blob", videos });
+      }
+
       const slotId = Number(id);
       if (!current.some((slot) => slot.id === slotId)) {
         return response.status(400).json({ error: "Invalid slot" });
