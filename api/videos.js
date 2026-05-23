@@ -3,12 +3,7 @@ const {
   readManifest,
   writeManifest,
 } = require("./video-data");
-
-const adminPasswords = new Set(["3907", "joey"]);
-
-function isAdminPassword(value) {
-  return adminPasswords.has(String(value || "").trim().toLowerCase());
-}
+const { isAdminPassword } = require("./admin-password");
 
 async function storePosterIfNeeded(poster, slotId) {
   if (typeof poster !== "string") return undefined;
@@ -46,7 +41,7 @@ module.exports = async function handler(request, response) {
     }
 
     if (request.method === "POST") {
-      const { action, eyebrow, id, password, poster, src, title } = request.body || {};
+      const { action, hidden, id, orderedIds, password, poster, src, title } = request.body || {};
 
       if (!isAdminPassword(password)) {
         return response.status(401).json({ error: "Unauthorized" });
@@ -61,7 +56,8 @@ module.exports = async function handler(request, response) {
           ...current,
           {
             id: nextId,
-            eyebrow: "",
+            hidden: false,
+            order: nextId,
             title: `New video ${nextId}`,
             poster: "",
             src: "",
@@ -85,6 +81,30 @@ module.exports = async function handler(request, response) {
         return response.status(200).json({ storage: "blob", videos });
       }
 
+      if (action === "delete") {
+        const slotId = Number(id);
+        const next = defaultVideoSlots.some((slot) => slot.id === slotId)
+          ? [...current.filter((slot) => slot.id !== slotId), { deleted: true, id: slotId }]
+          : current.filter((slot) => slot.id !== slotId);
+        const videos = await writeManifest(next);
+        return response.status(200).json({ storage: "blob", videos });
+      }
+
+      if (action === "reorder") {
+        const orderMap = new Map(
+          (Array.isArray(orderedIds) ? orderedIds : []).map((slotId, index) => [
+            Number(slotId),
+            index + 1,
+          ])
+        );
+        const next = current.map((slot) => ({
+          ...slot,
+          order: orderMap.get(Number(slot.id)) || slot.order || slot.id,
+        }));
+        const videos = await writeManifest(next);
+        return response.status(200).json({ storage: "blob", videos });
+      }
+
       const slotId = Number(id);
       if (!current.some((slot) => slot.id === slotId)) {
         return response.status(400).json({ error: "Invalid slot" });
@@ -95,7 +115,7 @@ module.exports = async function handler(request, response) {
         slot.id === slotId
           ? {
               ...slot,
-              eyebrow: typeof eyebrow === "string" ? eyebrow.trim() : slot.eyebrow,
+              hidden: typeof hidden === "boolean" ? hidden : Boolean(slot.hidden),
               poster: typeof nextPoster === "string" ? nextPoster : slot.poster,
               src: typeof src === "string" ? src : slot.src,
               title:

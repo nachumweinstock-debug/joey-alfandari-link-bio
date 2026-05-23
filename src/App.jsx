@@ -3,26 +3,50 @@ import { upload } from "@vercel/blob/client";
 import {
   ArrowUpRight,
   Clapperboard,
+  Eye,
+  EyeOff,
+  GripVertical,
   Instagram,
+  Link as LinkIcon,
+  Loader2,
   Lock,
   Mail,
   Maximize2,
   Play,
+  Plus,
   Save,
   Sparkles,
+  Trash2,
   Upload,
   X,
 } from "lucide-react";
 
 const accent = "#f5b700";
 
-// SWAP THIS: Replace public/joey-profile.jpg with Joey's real uploaded photo.
-const profilePhotoUrl = "/joey-profile.jpg";
-
 const defaultSiteSettings = {
+  profilePhotoUrl: "/profile-photo.jpg",
   handle: "@brave_spark_",
   name: "Brave Spark",
   tagline: "Motivation, mindset, and real-life growth with a human punch.",
+  metaTitle: "Brave Spark | @brave_spark_",
+  metaDescription:
+    "Brave Spark, @brave_spark_, motivation, mindset, and creative video work.",
+  videoEyebrow: "Video Work",
+  videoHeadline: "Built for vertical stories.",
+  links: [
+    {
+      id: "instagram",
+      label: "Instagram",
+      url: "https://www.instagram.com/brave_spark_/",
+      variant: "light",
+    },
+    {
+      id: "contact",
+      label: "Contact",
+      url: "https://docs.google.com/forms/d/e/1FAIpQLSc_jZ6p4xNrtJxUqtxWcUkvZHlnmYXX48O3-wG4J_oe5H0Oug/viewform?usp=publish-editor",
+      variant: "dark",
+    },
+  ],
   bio: [
     "I'm Brave Spark, a Long Island, New York creator making motivation feel human again.",
     "My work mixes storytelling, humor, vulnerability, and sharp real-life messages for people who want more than empty inspiration.",
@@ -30,27 +54,6 @@ const defaultSiteSettings = {
     "If it feels honest, cinematic, and a little uncomfortable in the right way, that's the spark.",
   ].join("\n\n"),
 };
-
-// SWAP THESE: Replace href values with Joey's actual links.
-const links = [
-  {
-    label: "Instagram",
-    href: "https://www.instagram.com/brave_spark_/",
-    icon: Instagram,
-  },
-  {
-    label: "Contact",
-    href: "https://docs.google.com/forms/d/e/1FAIpQLSc_jZ6p4xNrtJxUqtxWcUkvZHlnmYXX48O3-wG4J_oe5H0Oug/viewform?usp=publish-editor",
-    icon: Mail,
-    variant: "dark",
-  },
-];
-
-const adminPasswords = new Set(["3907", "joey"]);
-
-function isAdminPassword(value) {
-  return adminPasswords.has(String(value || "").trim().toLowerCase());
-}
 
 function getBioParagraphs(bio) {
   return String(bio || "")
@@ -62,33 +65,56 @@ function getBioParagraphs(bio) {
 const defaultVideoSlots = [
   {
     id: 1,
-    eyebrow: "",
+    hidden: false,
+    order: 1,
     title: "Upload video one",
     poster: "",
     src: "",
   },
   {
     id: 2,
-    eyebrow: "",
+    hidden: false,
+    order: 2,
     title: "Motivation that hits",
     poster: "",
     src: "",
   },
   {
     id: 3,
-    eyebrow: "",
+    hidden: false,
+    order: 3,
     title: "Real talk, sharp cut",
     poster: "",
     src: "",
   },
 ];
 
-function LinkCard({ href, icon: Icon, label, variant = "light" }) {
+function getLinkIcon(link) {
+  const key = `${link.id || ""} ${link.label || ""}`.toLowerCase();
+  if (key.includes("instagram")) return Instagram;
+  if (key.includes("contact") || key.includes("mail") || key.includes("email")) return Mail;
+  return LinkIcon;
+}
+
+function normalizeLink(link, index) {
+  return {
+    id: link.id || `link-${Date.now()}-${index}`,
+    label: link.label || `Link ${index + 1}`,
+    url: link.url || "#",
+    variant: link.variant === "dark" ? "dark" : "light",
+  };
+}
+
+function Spinner() {
+  return <Loader2 size={18} className="animate-spin" />;
+}
+
+function LinkCard({ icon: Icon, label, url, variant = "light" }) {
   const isDark = variant === "dark";
 
   return (
     <a
-      href={href}
+      href={url}
       target="_blank"
       rel="noreferrer"
       className={`group flex min-h-[70px] items-center justify-between rounded-[8px] border px-5 py-4 text-left shadow-[0_12px_35px_rgba(23,23,23,0.06)] backdrop-blur transition duration-300 hover:-translate-y-1 hover:shadow-[0_18px_45px_rgba(23,23,23,0.12)] focus:outline-none focus:ring-4 focus:ring-yellow-500/30 ${
@@ -120,6 +146,7 @@ function LinkCard({ href, icon: Icon, label, variant = "light" }) {
 }
 
 function IPhoneVideo({ onOpen, poster, src, title }) {
+  const hasPoster = Boolean(poster);
   return (
     <article className="group">
       <div className="mx-auto w-full max-w-[320px] rounded-[46px] bg-neutral-950 p-3 shadow-[0_30px_80px_rgba(23,23,23,0.28)] transition duration-300 group-hover:-translate-y-2">
@@ -148,11 +175,20 @@ function IPhoneVideo({ onOpen, poster, src, title }) {
             ) : (
               <div
                 className="flex h-full items-center justify-center bg-[radial-gradient(circle_at_30%_18%,#fff0a3_0%,#f5b700_28%,#161616_72%)] bg-cover bg-center text-neutral-950"
-                style={poster ? { backgroundImage: `url(${poster})` } : undefined}
+                style={hasPoster ? { backgroundImage: `url(${poster})` } : undefined}
               >
-                <div className="flex size-20 items-center justify-center rounded-full bg-white/95 shadow-[0_18px_45px_rgba(0,0,0,0.3)]">
-                  <Play size={34} fill="currentColor" />
-                </div>
+                {!hasPoster ? (
+                  <div className="text-center">
+                    <div className="mx-auto flex size-20 items-center justify-center rounded-full bg-white/95 shadow-[0_18px_45px_rgba(0,0,0,0.3)]">
+                      <Play size={34} fill="currentColor" />
+                    </div>
+                    <p className="mt-4 text-xl font-black">Brave Spark</p>
+                  </div>
+                ) : (
+                  <div className="flex size-20 items-center justify-center rounded-full bg-white/95 shadow-[0_18px_45px_rgba(0,0,0,0.3)]">
+                    <Play size={34} fill="currentColor" />
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -197,8 +233,12 @@ function VideoLightbox({ onClose, video }) {
 function AdminPanel({
   onClose,
   onAdd,
+  onDelete,
+  onReorder,
   onSave,
   onSaveSettings,
+  onToggleHidden,
+  onUploadAsset,
   settings,
   unlocked,
   setUnlocked,
@@ -209,40 +249,56 @@ function AdminPanel({
   const [passwordError, setPasswordError] = useState("");
   const [selectedId, setSelectedId] = useState(1);
   const selectedVideo = videoItems.find((video) => video.id === selectedId);
-  const [eyebrow, setEyebrow] = useState(selectedVideo?.eyebrow || "");
   const [title, setTitle] = useState(selectedVideo?.title || "");
   const [file, setFile] = useState(null);
   const [filePreviewUrl, setFilePreviewUrl] = useState("");
   const [poster, setPoster] = useState(selectedVideo?.poster || "");
   const [adding, setAdding] = useState(false);
-  const [saved, setSaved] = useState(false);
-  const [settingsSaved, setSettingsSaved] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [draggedId, setDraggedId] = useState(null);
+  const [previewMode, setPreviewMode] = useState(false);
   const [saving, setSaving] = useState(false);
   const [settingsSaving, setSettingsSaving] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [profileProgress, setProfileProgress] = useState(0);
   const [saveError, setSaveError] = useState("");
   const [settingsError, setSettingsError] = useState("");
   const [handle, setHandle] = useState(settings.handle);
+  const [links, setLinks] = useState(settings.links || defaultSiteSettings.links);
+  const [metaDescription, setMetaDescription] = useState(settings.metaDescription);
+  const [metaTitle, setMetaTitle] = useState(settings.metaTitle);
   const [name, setName] = useState(settings.name);
+  const [profileFile, setProfileFile] = useState(null);
+  const [profilePhotoUrl, setProfilePhotoUrl] = useState(settings.profilePhotoUrl);
+  const [profilePreviewUrl, setProfilePreviewUrl] = useState("");
   const [tagline, setTagline] = useState(settings.tagline);
   const [bio, setBio] = useState(settings.bio);
+  const [toast, setToast] = useState(null);
+  const [videoEyebrow, setVideoEyebrow] = useState(settings.videoEyebrow);
+  const [videoHeadline, setVideoHeadline] = useState(settings.videoHeadline);
+  const bioParagraphs = getBioParagraphs(bio);
 
   useEffect(() => {
-    setEyebrow(selectedVideo?.eyebrow || "");
     setTitle(selectedVideo?.title || "");
     setFile(null);
     setPoster(selectedVideo?.poster || "");
-    setSaved(false);
     setSaveError("");
-  }, [selectedId, selectedVideo?.eyebrow, selectedVideo?.poster, selectedVideo?.title]);
+    setUploadProgress(0);
+  }, [selectedId, selectedVideo?.poster, selectedVideo?.title]);
 
   useEffect(() => {
     setHandle(settings.handle);
+    setLinks(settings.links || defaultSiteSettings.links);
+    setMetaDescription(settings.metaDescription);
+    setMetaTitle(settings.metaTitle);
     setName(settings.name);
+    setProfilePhotoUrl(settings.profilePhotoUrl);
     setTagline(settings.tagline);
     setBio(settings.bio);
-    setSettingsSaved(false);
+    setVideoEyebrow(settings.videoEyebrow);
+    setVideoHeadline(settings.videoHeadline);
     setSettingsError("");
-  }, [settings.bio, settings.handle, settings.name, settings.tagline]);
+  }, [settings]);
 
   useEffect(() => {
     if (!file) {
@@ -256,15 +312,52 @@ function AdminPanel({
     return () => URL.revokeObjectURL(nextUrl);
   }, [file]);
 
-  function handlePasswordSubmit(event) {
-    event.preventDefault();
-    if (isAdminPassword(password)) {
-      setUnlocked(true);
-      setPasswordError("");
-      return;
+  useEffect(() => {
+    if (!profileFile) {
+      setProfilePreviewUrl("");
+      return undefined;
     }
 
-    setPasswordError("Wrong password.");
+    const nextUrl = URL.createObjectURL(profileFile);
+    setProfilePreviewUrl(nextUrl);
+
+    return () => URL.revokeObjectURL(nextUrl);
+  }, [profileFile]);
+
+  function showToast(type, message) {
+    setToast({ id: Date.now(), message, type });
+  }
+
+  function draftSettings() {
+    return {
+      bio,
+      handle,
+      links: links.map(normalizeLink),
+      metaDescription,
+      metaTitle,
+      name,
+      profilePhotoUrl: profilePreviewUrl || profilePhotoUrl,
+      tagline,
+      videoEyebrow,
+      videoHeadline,
+    };
+  }
+
+  async function handlePasswordSubmit(event) {
+    event.preventDefault();
+    setPasswordError("");
+    try {
+      const response = await fetch("/api/admin-auth", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password }),
+      });
+      if (!response.ok) throw new Error("Wrong password.");
+      setUnlocked(true);
+      showToast("success", "Admin unlocked.");
+    } catch (error) {
+      setPasswordError(error.message || "Wrong password.");
+    }
   }
 
   async function handleSave(event) {
@@ -277,20 +370,24 @@ function AdminPanel({
       const nextTitle = title.trim() || selectedVideo?.title || `Video ${selectedId}`;
 
       await onSave({
-        eyebrow: "",
         file,
+        hidden: Boolean(selectedVideo?.hidden),
         id: selectedId,
         password,
         poster,
+        setUploadProgress,
         title: nextTitle,
       });
       setTitle(nextTitle);
-      setSaved(true);
       setFile(null);
+      showToast("success", "Video saved live.");
     } catch (error) {
-      setSaveError(error?.message || "Save failed.");
+      const message = error?.message || "Save failed.";
+      setSaveError(message);
+      showToast("error", message);
     } finally {
       setSaving(false);
+      setUploadProgress(0);
     }
   }
 
@@ -301,18 +398,33 @@ function AdminPanel({
     setSettingsError("");
 
     try {
+      let nextProfilePhotoUrl = profilePhotoUrl;
+      if (profileFile) {
+        nextProfilePhotoUrl = await onUploadAsset(profileFile, password, setProfileProgress);
+      }
       await onSaveSettings({
         bio,
         handle,
+        links: links.map(normalizeLink),
+        metaDescription,
+        metaTitle,
         name,
         password,
+        profilePhotoUrl: nextProfilePhotoUrl,
         tagline,
+        videoEyebrow,
+        videoHeadline,
       });
-      setSettingsSaved(true);
+      setProfileFile(null);
+      setProfilePhotoUrl(nextProfilePhotoUrl);
+      showToast("success", "Site settings saved live.");
     } catch (error) {
-      setSettingsError(error?.message || "Account text save failed.");
+      const message = error?.message || "Site settings save failed.";
+      setSettingsError(message);
+      showToast("error", message);
     } finally {
       setSettingsSaving(false);
+      setProfileProgress(0);
     }
   }
 
@@ -342,11 +454,76 @@ function AdminPanel({
     try {
       const addedId = await onAdd(password);
       setSelectedId(addedId);
+      showToast("success", "iPhone added.");
     } catch (error) {
-      setSaveError(error?.message || "Could not add iPhone.");
+      const message = error?.message || "Could not add iPhone.";
+      setSaveError(message);
+      showToast("error", message);
     } finally {
       setAdding(false);
     }
+  }
+
+  async function handleDeleteSlot() {
+    if (!selectedVideo || !window.confirm(`Delete Slot ${selectedId}?`)) return;
+    setDeleting(true);
+    try {
+      const nextVideos = await onDelete(selectedId, password);
+      setSelectedId(nextVideos[0]?.id || 1);
+      showToast("success", "Video slot deleted.");
+    } catch (error) {
+      showToast("error", error?.message || "Could not delete slot.");
+    } finally {
+      setDeleting(false);
+    }
+  }
+
+  async function handleToggleHidden(video) {
+    try {
+      await onToggleHidden(video.id, !video.hidden, password);
+      showToast("success", video.hidden ? "Video shown." : "Video hidden.");
+    } catch (error) {
+      showToast("error", error?.message || "Could not update visibility.");
+    }
+  }
+
+  async function handleDrop(targetId) {
+    if (!draggedId || draggedId === targetId) return;
+    const ids = videoItems.map((video) => video.id);
+    const from = ids.indexOf(draggedId);
+    const to = ids.indexOf(targetId);
+    ids.splice(to, 0, ids.splice(from, 1)[0]);
+    setDraggedId(null);
+    try {
+      await onReorder(ids, password);
+      showToast("success", "Video order saved.");
+    } catch (error) {
+      showToast("error", error?.message || "Could not save order.");
+    }
+  }
+
+  function updateLink(index, patch) {
+    setLinks((current) =>
+      current.map((link, linkIndex) =>
+        linkIndex === index ? { ...link, ...patch } : link
+      )
+    );
+  }
+
+  function addLink() {
+    setLinks((current) => [
+      ...current,
+      {
+        id: `link-${Date.now()}`,
+        label: `Link ${current.length + 1}`,
+        url: "",
+        variant: current.length % 2 ? "dark" : "light",
+      },
+    ]);
+  }
+
+  function removeLink(index) {
+    setLinks((current) => current.filter((_, linkIndex) => linkIndex !== index));
   }
 
   return (
@@ -370,6 +547,17 @@ function AdminPanel({
             <X size={20} />
           </button>
         </div>
+        {toast ? (
+          <div
+            className={`mb-4 rounded-[8px] px-4 py-3 text-sm font-black ${
+              toast.type === "error"
+                ? "bg-red-100 text-red-800"
+                : "bg-green-100 text-green-800"
+            }`}
+          >
+            {toast.message}
+          </div>
+        ) : null}
 
         {!unlocked ? (
           <form onSubmit={handlePasswordSubmit} className="space-y-4">
@@ -402,7 +590,38 @@ function AdminPanel({
               onSubmit={handleSettingsSave}
               className="space-y-4 rounded-[10px] border border-neutral-950/15 bg-white/70 p-4"
             >
-              <h3 className="text-xl font-black tracking-normal">Account text</h3>
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <h3 className="text-xl font-black tracking-normal">Site controls</h3>
+                <button
+                  type="button"
+                  onClick={() => setPreviewMode((value) => !value)}
+                  className="rounded-[8px] border border-neutral-950/20 bg-white px-3 py-2 text-sm font-black"
+                >
+                  {previewMode ? "Hide preview" : "Preview unsaved"}
+                </button>
+              </div>
+              {previewMode ? (
+                <div className="rounded-[10px] bg-black p-4 text-yellow-300">
+                  <p className="inline-flex rounded-full bg-yellow-300 px-3 py-1 text-xs font-black text-black">
+                    {draftSettings().handle}
+                  </p>
+                  <h4 className="mt-4 text-4xl font-black">{draftSettings().name}</h4>
+                  <p className="mt-2 text-yellow-100">{draftSettings().tagline}</p>
+                  <div className="mt-4 grid gap-2 sm:grid-cols-2">
+                    {draftSettings().links.map((link, index) => {
+                      const Icon = getLinkIcon(link);
+                      return (
+                        <LinkCard key={link.id || index} icon={Icon} {...link} />
+                      );
+                    })}
+                  </div>
+                  <div className="mt-4 space-y-3 border border-yellow-300/30 p-4 text-sm text-yellow-100">
+                    {bioParagraphs.map((paragraph) => (
+                      <p key={paragraph}>{paragraph}</p>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
               <label className="block">
                 <span className="mb-2 block text-sm font-black text-neutral-800">
                   Name
@@ -416,6 +635,33 @@ function AdminPanel({
               </label>
               <label className="block">
                 <span className="mb-2 block text-sm font-black text-neutral-800">
+                  Profile photo
+                </span>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(event) => setProfileFile(event.target.files?.[0] || null)}
+                  className="w-full rounded-[8px] border border-neutral-950/20 bg-white px-4 py-3 font-bold"
+                />
+                <img
+                  src={profilePreviewUrl || profilePhotoUrl}
+                  alt="Profile preview"
+                  className="mt-3 aspect-[1600/657] w-full rounded-[8px] object-cover"
+                />
+              </label>
+              {profileProgress > 0 ? (
+                <div>
+                  <div className="h-3 overflow-hidden rounded-full bg-neutral-200">
+                    <div
+                      className="h-full bg-yellow-400"
+                      style={{ width: `${profileProgress}%` }}
+                    />
+                  </div>
+                  <p className="mt-1 text-xs font-bold">{profileProgress}% uploaded</p>
+                </div>
+              ) : null}
+              <label className="block">
+                <span className="mb-2 block text-sm font-black text-neutral-800">
                   Handle
                 </span>
                 <input
@@ -425,6 +671,59 @@ function AdminPanel({
                   className="w-full rounded-[8px] border border-neutral-950/20 bg-white px-4 py-3 font-bold outline-none transition focus:border-neutral-950 focus:ring-4 focus:ring-yellow-500/25"
                 />
               </label>
+              <div className="rounded-[8px] border border-neutral-950/15 bg-white/80 p-4">
+                <div className="mb-3 flex items-center justify-between gap-3">
+                  <h4 className="font-black">Hero links</h4>
+                  <button
+                    type="button"
+                    onClick={addLink}
+                    className="inline-flex items-center gap-2 rounded-[8px] bg-neutral-950 px-3 py-2 text-sm font-black text-white"
+                  >
+                    <Plus size={16} /> Add link button
+                  </button>
+                </div>
+                <div className="space-y-4">
+                  {links.map((link, index) => (
+                    <div key={link.id || index} className="rounded-[8px] border border-neutral-950/10 bg-white p-3">
+                      <div className="grid gap-3 sm:grid-cols-2">
+                        <input
+                          value={link.label}
+                          onChange={(event) => updateLink(index, { label: event.target.value })}
+                          placeholder="Button label"
+                          className="rounded-[8px] border border-neutral-950/20 px-3 py-2 font-bold"
+                        />
+                        <input
+                          value={link.url}
+                          onChange={(event) => updateLink(index, { url: event.target.value })}
+                          placeholder="https://..."
+                          className="rounded-[8px] border border-neutral-950/20 px-3 py-2 font-bold"
+                        />
+                      </div>
+                      <div className="mt-3 flex items-center justify-between">
+                        <label className="flex items-center gap-2 text-sm font-black">
+                          <input
+                            type="checkbox"
+                            checked={link.variant === "dark"}
+                            onChange={(event) =>
+                              updateLink(index, { variant: event.target.checked ? "dark" : "light" })
+                            }
+                          />
+                          Black/yellow style
+                        </label>
+                        {links.length > 1 ? (
+                          <button
+                            type="button"
+                            onClick={() => removeLink(index)}
+                            className="text-sm font-black text-red-700"
+                          >
+                            Remove
+                          </button>
+                        ) : null}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
               <label className="block">
                 <span className="mb-2 block text-sm font-black text-neutral-800">
                   Tagline
@@ -447,11 +746,65 @@ function AdminPanel({
                   className="w-full resize-y rounded-[8px] border border-neutral-950/20 bg-white px-4 py-3 font-bold leading-7 outline-none transition focus:border-neutral-950 focus:ring-4 focus:ring-yellow-500/25"
                 />
               </label>
-              {settingsSaved ? (
-                <p className="text-sm font-bold text-green-700">
-                  Account text saved live.
-                </p>
-              ) : null}
+              <div className="rounded-[8px] border border-neutral-950/15 bg-white/80 p-4">
+                <div className="mb-3 flex flex-wrap gap-3 text-sm font-black text-neutral-700">
+                  <span>{bio.length} characters</span>
+                  <span>{bioParagraphs.length} paragraphs</span>
+                </div>
+                <div className="space-y-3 rounded-[8px] bg-black p-4 text-sm font-semibold text-yellow-100">
+                  {bioParagraphs.map((paragraph) => (
+                    <p key={paragraph}>{paragraph}</p>
+                  ))}
+                </div>
+              </div>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <label className="block">
+                  <span className="mb-2 block text-sm font-black text-neutral-800">
+                    Video eyebrow
+                  </span>
+                  <input
+                    type="text"
+                    value={videoEyebrow}
+                    onChange={(event) => setVideoEyebrow(event.target.value)}
+                    className="w-full rounded-[8px] border border-neutral-950/20 bg-white px-4 py-3 font-bold"
+                  />
+                </label>
+                <label className="block">
+                  <span className="mb-2 block text-sm font-black text-neutral-800">
+                    Video headline
+                  </span>
+                  <input
+                    type="text"
+                    value={videoHeadline}
+                    onChange={(event) => setVideoHeadline(event.target.value)}
+                    className="w-full rounded-[8px] border border-neutral-950/20 bg-white px-4 py-3 font-bold"
+                  />
+                </label>
+              </div>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <label className="block">
+                  <span className="mb-2 block text-sm font-black text-neutral-800">
+                    Page title
+                  </span>
+                  <input
+                    type="text"
+                    value={metaTitle}
+                    onChange={(event) => setMetaTitle(event.target.value)}
+                    className="w-full rounded-[8px] border border-neutral-950/20 bg-white px-4 py-3 font-bold"
+                  />
+                </label>
+                <label className="block">
+                  <span className="mb-2 block text-sm font-black text-neutral-800">
+                    Meta description
+                  </span>
+                  <textarea
+                    value={metaDescription}
+                    onChange={(event) => setMetaDescription(event.target.value)}
+                    rows={3}
+                    className="w-full rounded-[8px] border border-neutral-950/20 bg-white px-4 py-3 font-bold"
+                  />
+                </label>
+              </div>
               {settingsError ? (
                 <p className="text-sm font-bold text-red-700">{settingsError}</p>
               ) : null}
@@ -460,26 +813,36 @@ function AdminPanel({
                 disabled={settingsSaving}
                 className="flex w-full items-center justify-center gap-2 rounded-[8px] bg-neutral-950 px-5 py-4 font-black text-white transition hover:bg-neutral-800"
               >
-                <Save size={18} className="text-yellow-300" />
-                {settingsSaving ? "Saving..." : "Save account text"}
+                {settingsSaving ? <Spinner /> : <Save size={18} className="text-yellow-300" />}
+                {settingsSaving ? "Saving..." : "Save site controls"}
               </button>
             </form>
 
             <form onSubmit={handleSave} className="space-y-4 rounded-[10px] border border-neutral-950/15 bg-white/70 p-4">
               <h3 className="text-xl font-black tracking-normal">Video slots</h3>
-            <div className="grid gap-3 sm:grid-cols-3">
+            <div className="grid gap-3">
               {videoItems.map((video) => (
                 <button
                   type="button"
+                  draggable
                   key={video.id}
+                  onDragStart={() => setDraggedId(video.id)}
+                  onDragOver={(event) => event.preventDefault()}
+                  onDrop={() => handleDrop(video.id)}
                   onClick={() => setSelectedId(video.id)}
-                  className={`rounded-[8px] border px-4 py-3 text-left text-sm font-black transition ${
+                  className={`flex items-center justify-between rounded-[8px] border px-4 py-3 text-left text-sm font-black transition ${
                     selectedId === video.id
                       ? "border-neutral-950 bg-yellow-300"
                       : "border-neutral-950/15 bg-white hover:border-neutral-950"
                   }`}
                 >
-                  Slot {video.id}
+                  <span className="flex items-center gap-2">
+                    <GripVertical size={16} />
+                    Slot {video.id}: {video.title}
+                  </span>
+                  <span className="flex items-center gap-2">
+                    {video.hidden ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </span>
                 </button>
               ))}
             </div>
@@ -494,6 +857,25 @@ function AdminPanel({
 
             <div className="rounded-[8px] border border-neutral-950/15 bg-white/80 p-3 text-sm font-bold text-neutral-800">
               Editing <span className="text-yellow-800">iPhone {selectedId}</span>
+            </div>
+            <div className="flex flex-wrap gap-3">
+              <button
+                type="button"
+                onClick={() => selectedVideo && handleToggleHidden(selectedVideo)}
+                className="inline-flex items-center gap-2 rounded-[8px] border border-neutral-950/20 bg-white px-4 py-3 font-black"
+              >
+                {selectedVideo?.hidden ? <Eye size={18} /> : <EyeOff size={18} />}
+                {selectedVideo?.hidden ? "Show slot" : "Hide slot"}
+              </button>
+              <button
+                type="button"
+                onClick={handleDeleteSlot}
+                disabled={deleting}
+                className="inline-flex items-center gap-2 rounded-[8px] bg-red-700 px-4 py-3 font-black text-white disabled:opacity-60"
+              >
+                {deleting ? <Spinner /> : <Trash2 size={18} />}
+                Delete slot
+              </button>
             </div>
 
             <label className="block">
@@ -554,12 +936,18 @@ function AdminPanel({
                 />
               </div>
             ) : null}
-
-            {saved ? (
-              <p className="text-sm font-bold text-green-700">
-                Title and video saved live.
-              </p>
+            {uploadProgress > 0 ? (
+              <div>
+                <div className="h-3 overflow-hidden rounded-full bg-neutral-200">
+                  <div
+                    className="h-full bg-yellow-400"
+                    style={{ width: `${uploadProgress}%` }}
+                  />
+                </div>
+                <p className="mt-1 text-xs font-bold">{uploadProgress}% uploaded</p>
+              </div>
             ) : null}
+
             {saveError ? (
               <p className="text-sm font-bold text-red-700">{saveError}</p>
             ) : null}
@@ -569,7 +957,7 @@ function AdminPanel({
               disabled={saving}
               className="flex w-full items-center justify-center gap-2 rounded-[8px] bg-neutral-950 px-5 py-4 font-black text-white transition hover:bg-neutral-800"
             >
-              <Save size={18} className="text-yellow-300" />
+              {saving ? <Spinner /> : <Save size={18} className="text-yellow-300" />}
               {saving ? "Saving..." : "Save changes live"}
             </button>
           </form>
@@ -589,6 +977,20 @@ export default function App() {
   const [videoItems, setVideoItems] = useState(defaultVideoSlots);
   const [storageMessage, setStorageMessage] = useState("");
   const bioParagraphs = getBioParagraphs(siteSettings.bio);
+
+  useEffect(() => {
+    document.title = siteSettings.metaTitle || defaultSiteSettings.metaTitle;
+    let metaDescription = document.querySelector('meta[name="description"]');
+    if (!metaDescription) {
+      metaDescription = document.createElement("meta");
+      metaDescription.setAttribute("name", "description");
+      document.head.appendChild(metaDescription);
+    }
+    metaDescription.setAttribute(
+      "content",
+      siteSettings.metaDescription || defaultSiteSettings.metaDescription
+    );
+  }, [siteSettings.metaDescription, siteSettings.metaTitle]);
 
   useEffect(() => {
     let mounted = true;
@@ -619,7 +1021,7 @@ export default function App() {
     };
   }, []);
 
-  async function handleVideoSave({ eyebrow, file, id, password, poster, title }) {
+  async function handleVideoSave({ file, hidden, id, password, poster, setUploadProgress, title }) {
     let uploadedUrl;
 
     if (file) {
@@ -628,8 +1030,10 @@ export default function App() {
         access: "public",
         handleUploadUrl: "/api/blob-upload",
         multipart: true,
+        onUploadProgress: ({ percentage }) => {
+          setUploadProgress?.(Math.round(percentage));
+        },
         clientPayload: JSON.stringify({
-          eyebrow: "",
           id,
           password,
           title,
@@ -644,7 +1048,7 @@ export default function App() {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        eyebrow: "",
+        hidden,
         id,
         password,
         poster,
@@ -681,7 +1085,74 @@ export default function App() {
     return data.addedId;
   }
 
-  async function handleSettingsSave({ bio, handle, name, password, tagline }) {
+  async function handleDeleteVideoSlot(id, password) {
+    const response = await fetch("/api/videos", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "delete", id, password }),
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || "Could not delete slot.");
+    setVideoItems(data.videos || defaultVideoSlots);
+    return data.videos || defaultVideoSlots;
+  }
+
+  async function handleReorderVideoSlots(orderedIds, password) {
+    const response = await fetch("/api/videos", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "reorder", orderedIds, password }),
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || "Could not reorder slots.");
+    setVideoItems(data.videos || defaultVideoSlots);
+  }
+
+  async function handleToggleVideoHidden(id, hidden, password) {
+    const current = videoItems.find((video) => video.id === id);
+    const response = await fetch("/api/videos", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        hidden,
+        id,
+        password,
+        poster: current?.poster,
+        src: current?.src,
+        title: current?.title,
+      }),
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || "Could not update visibility.");
+    setVideoItems(data.videos || defaultVideoSlots);
+  }
+
+  async function handleAssetUpload(file, password, setProgress) {
+    const safeName = file.name.replace(/[^a-z0-9._-]/gi, "-").toLowerCase();
+    const blob = await upload(`brave-spark/assets/${Date.now()}-${safeName}`, file, {
+      access: "public",
+      handleUploadUrl: "/api/asset-upload",
+      onUploadProgress: ({ percentage }) => {
+        setProgress?.(Math.round(percentage));
+      },
+      clientPayload: JSON.stringify({ password }),
+    });
+    return blob.url;
+  }
+
+  async function handleSettingsSave({
+    bio,
+    handle,
+    links,
+    metaDescription,
+    metaTitle,
+    name,
+    password,
+    profilePhotoUrl,
+    tagline,
+    videoEyebrow,
+    videoHeadline,
+  }) {
     const response = await fetch("/api/site-settings", {
       method: "POST",
       headers: {
@@ -690,9 +1161,15 @@ export default function App() {
       body: JSON.stringify({
         bio,
         handle,
+        links,
+        metaDescription,
+        metaTitle,
         name,
         password,
+        profilePhotoUrl,
         tagline,
+        videoEyebrow,
+        videoHeadline,
       }),
     });
 
@@ -712,9 +1189,6 @@ export default function App() {
   return (
     <main className="min-h-screen overflow-hidden bg-black text-yellow-300">
       <section className="relative bg-black px-5 py-12 text-yellow-300 sm:px-8 sm:py-14 lg:px-10 lg:py-16">
-        <div className="pointer-events-none absolute left-0 top-0 h-56 w-56 -translate-x-1/2 -translate-y-1/2 rounded-full bg-yellow-400/20 blur-3xl" />
-        <div className="pointer-events-none absolute bottom-10 right-0 h-64 w-64 translate-x-1/3 rounded-full bg-yellow-500/15 blur-3xl" />
-
         <div className="mx-auto grid w-full max-w-6xl gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
           <div className="animate-rise-in text-center lg:text-left">
             <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-yellow-300/35 bg-yellow-300 px-4 py-2 text-sm font-black text-black shadow-sm">
@@ -731,17 +1205,19 @@ export default function App() {
             </p>
 
             <div className="mx-auto mt-8 grid max-w-md gap-3 sm:grid-cols-2 lg:mx-0">
-              {links.map((link) => (
-                <LinkCard key={link.label} {...link} />
-              ))}
+              {(siteSettings.links || defaultSiteSettings.links).map((link, index) => {
+                const normalized = normalizeLink(link, index);
+                const Icon = getLinkIcon(normalized);
+                return <LinkCard key={normalized.id} icon={Icon} {...normalized} />;
+              })}
             </div>
           </div>
 
           <div className="animate-rise-in mx-auto w-full [animation-delay:120ms]">
             <div className="relative rounded-[28px] border border-yellow-300/55 bg-yellow-300 p-3 shadow-[0_24px_90px_rgba(245,183,0,0.18)]">
-              {profilePhotoUrl ? (
+              {siteSettings.profilePhotoUrl ? (
                 <img
-                  src={profilePhotoUrl}
+                  src={siteSettings.profilePhotoUrl}
                   alt="Brave Spark"
                   className="aspect-[1596/656] h-auto w-full rounded-[20px] object-contain"
                 />
@@ -778,16 +1254,16 @@ export default function App() {
             <div>
               <div className="mb-5 inline-flex items-center gap-2 rounded-full bg-neutral-950 px-4 py-2 text-sm font-black text-yellow-300 shadow-[0_18px_40px_rgba(23,23,23,0.22)]">
                 <Clapperboard size={17} />
-                <span>Video Work</span>
+                <span>{siteSettings.videoEyebrow}</span>
               </div>
               <h2 className="max-w-3xl text-5xl font-black leading-none tracking-normal text-neutral-950 sm:text-6xl">
-                Built for vertical stories.
+                {siteSettings.videoHeadline}
               </h2>
             </div>
           </div>
 
           <div className="grid gap-10 md:grid-cols-3">
-            {videoItems.map((video) => (
+            {videoItems.filter((video) => !video.hidden).map((video) => (
               <IPhoneVideo
                 key={video.id}
                 {...video}
@@ -819,8 +1295,12 @@ export default function App() {
         <AdminPanel
           onClose={() => setAdminOpen(false)}
           onAdd={handleAddVideoSlot}
+          onDelete={handleDeleteVideoSlot}
+          onReorder={handleReorderVideoSlots}
           onSave={handleVideoSave}
           onSaveSettings={handleSettingsSave}
+          onToggleHidden={handleToggleVideoHidden}
+          onUploadAsset={handleAssetUpload}
           settings={siteSettings}
           setUnlocked={setAdminUnlocked}
           unlocked={adminUnlocked}

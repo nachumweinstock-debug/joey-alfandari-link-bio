@@ -3,12 +3,7 @@ const {
   readSettings,
   writeSettings,
 } = require("./site-data");
-
-const adminPasswords = new Set(["3907", "joey"]);
-
-function isAdminPassword(value) {
-  return adminPasswords.has(String(value || "").trim().toLowerCase());
-}
+const { isAdminPassword } = require("./admin-password");
 
 module.exports = async function handler(request, response) {
   try {
@@ -19,13 +14,36 @@ module.exports = async function handler(request, response) {
     }
 
     if (request.method === "POST") {
-      const { bio, handle, name, password, tagline } = request.body || {};
+      const {
+        bio,
+        handle,
+        links,
+        metaDescription,
+        metaTitle,
+        name,
+        password,
+        profilePhotoUrl,
+        tagline,
+        videoEyebrow,
+        videoHeadline,
+      } = request.body || {};
 
       if (!isAdminPassword(password)) {
         return response.status(401).json({ error: "Unauthorized" });
       }
 
-      const settings = await writeSettings({ bio, handle, name, tagline });
+      const settings = await writeSettings({
+        bio,
+        handle,
+        links,
+        metaDescription,
+        metaTitle,
+        name,
+        profilePhotoUrl,
+        tagline,
+        videoEyebrow,
+        videoHeadline,
+      });
       return response.status(200).json({ settings });
     }
 
