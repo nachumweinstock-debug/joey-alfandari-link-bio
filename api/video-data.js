@@ -50,7 +50,7 @@ function mergeManifest(records = []) {
       order: Number(merged.order) || merged.id,
       poster: typeof merged.poster === "string" ? merged.poster : "",
       src: typeof merged.src === "string" ? merged.src : "",
-      title: typeof merged.title === "string" && merged.title.trim() ? merged.title : slot.title,
+      title: typeof merged.title === "string" ? merged.title : slot.title,
     };
   }).filter(Boolean);
 
@@ -65,10 +65,7 @@ function mergeManifest(records = []) {
         order: Number(item.order) || id,
         poster: typeof item.poster === "string" ? item.poster : "",
         src: typeof item.src === "string" ? item.src : "",
-        title:
-          typeof item.title === "string" && item.title.trim()
-            ? item.title
-            : `New video ${id}`,
+        title: typeof item.title === "string" ? item.title : `New video ${id}`,
       };
     });
 

@@ -106,25 +106,39 @@ module.exports = async function handler(request, response) {
       }
 
       const slotId = Number(id);
-      if (!current.some((slot) => slot.id === slotId)) {
+      if (!Number.isFinite(slotId) || slotId < 1) {
         return response.status(400).json({ error: "Invalid slot" });
       }
 
       const nextPoster = await storePosterIfNeeded(poster, slotId);
-      const next = current.map((slot) =>
-        slot.id === slotId
-          ? {
-              ...slot,
-              hidden: typeof hidden === "boolean" ? hidden : Boolean(slot.hidden),
-              poster: typeof nextPoster === "string" ? nextPoster : slot.poster,
-              src: typeof src === "string" ? src : slot.src,
-              title:
-                typeof title === "string" && title.trim()
-                  ? title.trim()
-                  : slot.title,
-            }
-          : slot
-      );
+      const existing = current.find((slot) => slot.id === slotId);
+      const next = existing
+        ? current.map((slot) =>
+            slot.id === slotId
+              ? {
+                  ...slot,
+                  hidden: typeof hidden === "boolean" ? hidden : Boolean(slot.hidden),
+                  poster: typeof nextPoster === "string" ? nextPoster : slot.poster,
+                  src: typeof src === "string" ? src : slot.src,
+                  title: typeof title === "string" ? title : slot.title,
+                }
+              : slot
+          )
+        : [
+            ...current,
+            {
+              hidden: typeof hidden === "boolean" ? hidden : false,
+              id: slotId,
+              order:
+                current.reduce(
+                  (max, slot) => Math.max(max, Number(slot.order) || Number(slot.id) || 0),
+                  0
+                ) + 1,
+              poster: typeof nextPoster === "string" ? nextPoster : "",
+              src: typeof src === "string" ? src : "",
+              title: typeof title === "string" ? title : `New video ${slotId}`,
+            },
+          ];
 
       const videos = await writeManifest(next);
       return response.status(200).json({ storage: "blob", videos });

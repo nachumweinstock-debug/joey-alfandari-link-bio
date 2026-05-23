@@ -33,65 +33,39 @@ const defaultSiteSettings = {
 };
 
 function cleanLinks(links) {
-  const source = Array.isArray(links) && links.length ? links : defaultSiteSettings.links;
+  const source = Array.isArray(links) ? links : defaultSiteSettings.links;
   return source
     .map((link, index) => ({
       id:
         typeof link.id === "string" && link.id.trim()
           ? link.id.trim()
           : `link-${index + 1}`,
-      label:
-        typeof link.label === "string" && link.label.trim()
-          ? link.label.trim()
-          : `Link ${index + 1}`,
-      url:
-        typeof link.url === "string" && link.url.trim()
-          ? link.url.trim()
-          : "#",
+      label: typeof link.label === "string" ? link.label : `Link ${index + 1}`,
+      url: typeof link.url === "string" ? link.url : "#",
       variant: link.variant === "dark" ? "dark" : "light",
     }))
     .slice(0, 6);
 }
 
+function settingString(record, key) {
+  return Object.prototype.hasOwnProperty.call(record, key) &&
+    typeof record[key] === "string"
+    ? record[key]
+    : defaultSiteSettings[key];
+}
+
 function cleanSettings(record = {}) {
   return {
-    profilePhotoUrl:
-      typeof record.profilePhotoUrl === "string" && record.profilePhotoUrl.trim()
-        ? record.profilePhotoUrl.trim()
-        : defaultSiteSettings.profilePhotoUrl,
-    handle:
-      typeof record.handle === "string" && record.handle.trim()
-        ? record.handle.trim()
-        : defaultSiteSettings.handle,
-    name:
-      typeof record.name === "string" && record.name.trim()
-        ? record.name.trim()
-        : defaultSiteSettings.name,
-    tagline:
-      typeof record.tagline === "string" && record.tagline.trim()
-        ? record.tagline.trim()
-        : defaultSiteSettings.tagline,
-    metaTitle:
-      typeof record.metaTitle === "string" && record.metaTitle.trim()
-        ? record.metaTitle.trim()
-        : defaultSiteSettings.metaTitle,
-    metaDescription:
-      typeof record.metaDescription === "string" && record.metaDescription.trim()
-        ? record.metaDescription.trim()
-        : defaultSiteSettings.metaDescription,
-    videoEyebrow:
-      typeof record.videoEyebrow === "string" && record.videoEyebrow.trim()
-        ? record.videoEyebrow.trim()
-        : defaultSiteSettings.videoEyebrow,
-    videoHeadline:
-      typeof record.videoHeadline === "string" && record.videoHeadline.trim()
-        ? record.videoHeadline.trim()
-        : defaultSiteSettings.videoHeadline,
+    profilePhotoUrl: settingString(record, "profilePhotoUrl"),
+    handle: settingString(record, "handle"),
+    name: settingString(record, "name"),
+    tagline: settingString(record, "tagline"),
+    metaTitle: settingString(record, "metaTitle"),
+    metaDescription: settingString(record, "metaDescription"),
+    videoEyebrow: settingString(record, "videoEyebrow"),
+    videoHeadline: settingString(record, "videoHeadline"),
     links: cleanLinks(record.links),
-    bio:
-      typeof record.bio === "string" && record.bio.trim()
-        ? record.bio.trim()
-        : defaultSiteSettings.bio,
+    bio: settingString(record, "bio"),
   };
 }
 

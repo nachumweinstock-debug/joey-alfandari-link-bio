@@ -277,6 +277,7 @@ function AdminPanel({
   const [videoEyebrow, setVideoEyebrow] = useState(settings.videoEyebrow);
   const [videoHeadline, setVideoHeadline] = useState(settings.videoHeadline);
   const bioParagraphs = getBioParagraphs(bio);
+  const frameSource = filePreviewUrl || selectedVideo?.src || "";
 
   useEffect(() => {
     setTitle(selectedVideo?.title || "");
@@ -368,7 +369,7 @@ function AdminPanel({
     setSaveError("");
 
     try {
-      const nextTitle = title.trim() || selectedVideo?.title || `Video ${selectedId}`;
+      const nextTitle = title;
 
       await onSave({
         file,
@@ -441,9 +442,15 @@ function AdminPanel({
     canvas.width = Math.round(video.videoWidth * scale);
     canvas.height = Math.round(video.videoHeight * scale);
     const context = canvas.getContext("2d");
-    context.drawImage(video, 0, 0, canvas.width, canvas.height);
-    setPoster(canvas.toDataURL("image/jpeg", 0.82));
-    setSaveError("");
+    try {
+      context.drawImage(video, 0, 0, canvas.width, canvas.height);
+      setPoster(canvas.toDataURL("image/jpeg", 0.82));
+      setSaveError("");
+    } catch {
+      setSaveError(
+        "This video source does not allow frame capture. Upload a replacement video or use a newly uploaded file to pick a thumbnail."
+      );
+    }
   }
 
   async function handleAddSlot() {
@@ -904,11 +911,17 @@ function AdminPanel({
               />
             </label>
 
-            {filePreviewUrl ? (
+            {frameSource ? (
               <div className="rounded-[8px] border border-neutral-950/15 bg-white/80 p-4">
+                <p className="mb-3 text-sm font-black text-neutral-800">
+                  {filePreviewUrl
+                    ? "Choose a thumbnail from the new video"
+                    : "Choose a new thumbnail from the uploaded video"}
+                </p>
                 <video
                   ref={frameVideoRef}
-                  src={filePreviewUrl}
+                  src={frameSource}
+                  crossOrigin="anonymous"
                   controls
                   playsInline
                   className="mx-auto aspect-[9/16] max-h-[240px] rounded-[8px] bg-black object-contain sm:max-h-[300px]"

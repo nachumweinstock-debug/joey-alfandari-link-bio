@@ -1,5 +1,4 @@
 const { handleUpload } = require("@vercel/blob/client");
-const { readManifest } = require("./video-data");
 const { isAdminPassword } = require("./admin-password");
 
 module.exports = async function handler(request, response) {
@@ -15,8 +14,7 @@ module.exports = async function handler(request, response) {
         }
 
         const slotId = Number(payload.id);
-        const current = await readManifest();
-        if (!current.some((slot) => slot.id === slotId)) {
+        if (!Number.isFinite(slotId) || slotId < 1) {
           throw new Error("Invalid slot");
         }
 
