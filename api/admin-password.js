@@ -1,6 +1,10 @@
 function isAdminPassword(value) {
-  const password = process.env.ADMIN_PASSWORD;
-  return Boolean(password) && String(value || "") === password;
+  const passwords = String(process.env.ADMIN_PASSWORD || "")
+    .split(",")
+    .map((password) => password.trim())
+    .filter(Boolean);
+
+  return passwords.includes(String(value || "").trim());
 }
 
 module.exports = { isAdminPassword };

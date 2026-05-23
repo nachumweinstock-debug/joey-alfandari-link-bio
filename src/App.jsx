@@ -346,13 +346,15 @@ function AdminPanel({
   async function handlePasswordSubmit(event) {
     event.preventDefault();
     setPasswordError("");
+    const nextPassword = password.trim();
     try {
       const response = await fetch("/api/admin-auth", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ password }),
+        body: JSON.stringify({ password: nextPassword }),
       });
       if (!response.ok) throw new Error("Wrong password.");
+      setPassword(nextPassword);
       setUnlocked(true);
       showToast("success", "Admin unlocked.");
     } catch (error) {
@@ -364,7 +366,6 @@ function AdminPanel({
     event.preventDefault();
     setSaving(true);
     setSaveError("");
-    setSaved(false);
 
     try {
       const nextTitle = title.trim() || selectedVideo?.title || `Video ${selectedId}`;
@@ -394,7 +395,6 @@ function AdminPanel({
   async function handleSettingsSave(event) {
     event.preventDefault();
     setSettingsSaving(true);
-    setSettingsSaved(false);
     setSettingsError("");
 
     try {
@@ -449,7 +449,6 @@ function AdminPanel({
   async function handleAddSlot() {
     setAdding(true);
     setSaveError("");
-    setSaved(false);
 
     try {
       const addedId = await onAdd(password);
