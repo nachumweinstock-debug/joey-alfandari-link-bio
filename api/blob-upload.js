@@ -1,5 +1,5 @@
 const { handleUpload } = require("@vercel/blob/client");
-const { readManifest, writeManifest } = require("./video-data");
+const { readManifest } = require("./video-data");
 
 const adminPasswords = new Set(["3907", "joey"]);
 
@@ -30,29 +30,12 @@ module.exports = async function handler(request, response) {
           maximumSizeInBytes: 1024 * 1024 * 500,
           addRandomSuffix: true,
           tokenPayload: JSON.stringify({
-            eyebrow: payload.eyebrow,
             id: slotId,
             title: payload.title,
           }),
         };
       },
-      onUploadCompleted: async ({ blob, tokenPayload }) => {
-        const payload = JSON.parse(tokenPayload || "{}");
-        const slotId = Number(payload.id);
-        const current = await readManifest();
-        const next = current.map((slot) =>
-          slot.id === slotId
-            ? {
-                ...slot,
-                eyebrow: payload.eyebrow || slot.eyebrow,
-                src: blob.url,
-                title: payload.title || slot.title,
-              }
-            : slot
-        );
-
-        await writeManifest(next);
-      },
+      onUploadCompleted: async () => {},
     });
 
     return response.status(200).json(jsonResponse);

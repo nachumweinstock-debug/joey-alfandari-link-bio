@@ -10,6 +10,33 @@ function isAdminPassword(value) {
   return adminPasswords.has(String(value || "").trim().toLowerCase());
 }
 
+async function storePosterIfNeeded(poster, slotId) {
+  if (typeof poster !== "string") return undefined;
+  if (!poster.startsWith("data:image/")) return poster;
+
+  const match = poster.match(/^data:(image\/(?:jpeg|jpg|png|webp));base64,(.+)$/);
+  if (!match) return "";
+
+  const [, contentType, base64] = match;
+  const extension = contentType.includes("png")
+    ? "png"
+    : contentType.includes("webp")
+      ? "webp"
+      : "jpg";
+  const { put } = require("@vercel/blob");
+  const blob = await put(
+    `brave-spark/posters/slot-${slotId}-${Date.now()}.${extension}`,
+    Buffer.from(base64, "base64"),
+    {
+      access: "public",
+      addRandomSuffix: true,
+      contentType,
+    }
+  );
+
+  return blob.url;
+}
+
 module.exports = async function handler(request, response) {
   try {
     if (request.method === "GET") {
@@ -49,12 +76,13 @@ module.exports = async function handler(request, response) {
         return response.status(400).json({ error: "Invalid slot" });
       }
 
+      const nextPoster = await storePosterIfNeeded(poster, slotId);
       const next = current.map((slot) =>
         slot.id === slotId
           ? {
               ...slot,
               eyebrow: typeof eyebrow === "string" ? eyebrow.trim() : slot.eyebrow,
-              poster: typeof poster === "string" ? poster : slot.poster,
+              poster: typeof nextPoster === "string" ? nextPoster : slot.poster,
               src: typeof src === "string" ? src : slot.src,
               title:
                 typeof title === "string" && title.trim()
