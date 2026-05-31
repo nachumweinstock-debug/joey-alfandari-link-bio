@@ -130,7 +130,24 @@ function getVimeoId(url) {
   }
 }
 
+function getInstagramEmbedUrl(url) {
+  try {
+    const parsed = new URL(url);
+    if (!parsed.hostname.includes("instagram.com")) return "";
+    const parts = parsed.pathname.split("/").filter(Boolean);
+    const type = parts[0];
+    const code = parts[1];
+    if (!["p", "reel", "tv"].includes(type) || !code) return "";
+    return `https://www.instagram.com/${type}/${code}/embed`;
+  } catch {
+    return "";
+  }
+}
+
 function getEmbedUrl(url) {
+  const instagramEmbedUrl = getInstagramEmbedUrl(url);
+  if (instagramEmbedUrl) return instagramEmbedUrl;
+
   const youtubeId = getYouTubeId(url);
   if (youtubeId) return `https://www.youtube.com/embed/${youtubeId}`;
 
@@ -138,6 +155,12 @@ function getEmbedUrl(url) {
   if (vimeoId) return `https://player.vimeo.com/video/${vimeoId}`;
 
   return "";
+}
+
+function getLightboxEmbedUrl(url) {
+  const embedUrl = getEmbedUrl(url);
+  if (!embedUrl || embedUrl.includes("instagram.com")) return embedUrl;
+  return `${embedUrl}${embedUrl.includes("?") ? "&" : "?"}autoplay=1`;
 }
 
 function getDefaultPoster(video) {
@@ -185,6 +208,7 @@ function LinkCard({ icon: Icon, label, url, variant = "light" }) {
 
 function IPhoneVideo({ onOpen, poster, src, title }) {
   const embedUrl = getEmbedUrl(src);
+  const isInstagram = Boolean(getInstagramEmbedUrl(src));
   const posterUrl = poster || getDefaultPoster({ poster, src });
   const hasPoster = Boolean(posterUrl);
   return (
@@ -193,7 +217,22 @@ function IPhoneVideo({ onOpen, poster, src, title }) {
         <div className="relative overflow-hidden rounded-[32px] bg-neutral-900">
           <div className="absolute left-1/2 top-0 z-20 h-6 w-28 -translate-x-1/2 rounded-b-2xl bg-neutral-950" />
           <div className="aspect-[9/16]">
-            {embedUrl ? (
+            {embedUrl && isInstagram ? (
+              <button
+                type="button"
+                onClick={onOpen}
+                className="relative flex h-full w-full items-center justify-center bg-[radial-gradient(circle_at_30%_18%,#fff0a3_0%,#f5b700_30%,#161616_74%)] p-8 text-neutral-950"
+                aria-label={`Open ${title}`}
+              >
+                <span className="absolute inset-0 bg-black/10" />
+                <span className="relative text-center">
+                  <span className="mx-auto flex size-20 items-center justify-center rounded-full bg-white/95 shadow-[0_18px_45px_rgba(0,0,0,0.3)]">
+                    <Instagram size={34} />
+                  </span>
+                  <span className="mt-4 block text-xl font-black">Instagram Reel</span>
+                </span>
+              </button>
+            ) : embedUrl ? (
               <button
                 type="button"
                 onClick={onOpen}
@@ -267,7 +306,7 @@ function IPhoneVideo({ onOpen, poster, src, title }) {
 
 function VideoLightbox({ onClose, video }) {
   if (!video) return null;
-  const embedUrl = getEmbedUrl(video.src);
+  const embedUrl = getLightboxEmbedUrl(video.src);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-neutral-950/90 p-4">
@@ -282,7 +321,7 @@ function VideoLightbox({ onClose, video }) {
       <div className="h-full max-h-[88vh] w-full max-w-5xl">
         {embedUrl ? (
           <iframe
-            src={`${embedUrl}${embedUrl.includes("?") ? "&" : "?"}autoplay=1`}
+            src={embedUrl}
             title={video.title}
             allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
             allowFullScreen
@@ -821,144 +860,132 @@ function AdminPanel({
             </form>
 
             <form onSubmit={handleSave} className="space-y-4 rounded-[10px] border border-neutral-950/15 bg-white/70 p-4">
-              <h3 className="text-xl font-black tracking-normal">Video slots</h3>
-            <div className="grid gap-3">
-              {videoItems.map((video) => (
+              <div className="flex items-center justify-between gap-3">
+                <h3 className="text-xl font-black tracking-normal">Videos</h3>
                 <button
                   type="button"
-                  draggable
-                  key={video.id}
-                  onDragStart={() => setDraggedId(video.id)}
-                  onDragOver={(event) => event.preventDefault()}
-                  onDrop={() => handleDrop(video.id)}
-                  onClick={() => setSelectedId(video.id)}
-                  className={`flex items-center justify-between rounded-[8px] border px-4 py-3 text-left text-sm font-black transition ${
-                    selectedId === video.id
-                      ? "border-neutral-950 bg-yellow-300"
-                      : "border-neutral-950/15 bg-white hover:border-neutral-950"
-                  }`}
+                  onClick={handleAddSlot}
+                  disabled={adding}
+                  className="inline-flex items-center gap-2 rounded-[8px] bg-neutral-950 px-4 py-3 font-black text-white transition hover:bg-neutral-800 disabled:opacity-60"
                 >
-                  <span className="flex items-center gap-2">
-                    <GripVertical size={16} />
-                    Slot {video.id}: {video.title}
-                  </span>
-                  <span className="flex items-center gap-2">
-                    {video.hidden ? <EyeOff size={16} /> : <Eye size={16} />}
-                  </span>
+                  {adding ? <Spinner /> : <Plus size={18} className="text-yellow-300" />}
+                  {adding ? "Adding..." : "Add Video"}
                 </button>
-              ))}
-            </div>
-            <button
-              type="button"
-              onClick={handleAddSlot}
-              disabled={adding}
-              className="flex w-full items-center justify-center gap-2 rounded-[8px] border border-neutral-950/20 bg-white px-5 py-3 font-black text-neutral-950 transition hover:-translate-y-0.5 hover:border-neutral-950 disabled:opacity-60"
-            >
-              {adding ? "Adding..." : "Add iPhone"}
-            </button>
+              </div>
 
-            <div className="rounded-[8px] border border-neutral-950/15 bg-white/80 p-3 text-sm font-bold text-neutral-800">
-              Editing <span className="text-yellow-800">iPhone {selectedId}</span>
-            </div>
-            <div className="flex flex-wrap gap-3">
-              <button
-                type="button"
-                onClick={() => selectedVideo && handleToggleHidden(selectedVideo)}
-                className="inline-flex items-center gap-2 rounded-[8px] border border-neutral-950/20 bg-white px-4 py-3 font-black"
-              >
-                {selectedVideo?.hidden ? <Eye size={18} /> : <EyeOff size={18} />}
-                {selectedVideo?.hidden ? "Show slot" : "Hide slot"}
-              </button>
-              <button
-                type="button"
-                onClick={handleDeleteSlot}
-                disabled={deleting}
-                className="inline-flex items-center gap-2 rounded-[8px] bg-red-700 px-4 py-3 font-black text-white disabled:opacity-60"
-              >
-                {deleting ? <Spinner /> : <Trash2 size={18} />}
-                Delete slot
-              </button>
-            </div>
-
-            <label className="block">
-              <span className="mb-2 block text-sm font-black text-neutral-800">
-                Video title
-              </span>
-              <input
-                type="text"
-                value={title}
-                onChange={(event) => setTitle(event.target.value)}
-                placeholder="Type the title that shows under this iPhone"
-                className="w-full rounded-[8px] border border-neutral-950/20 bg-white px-4 py-3 font-bold outline-none transition focus:border-neutral-950 focus:ring-4 focus:ring-yellow-500/25"
-              />
-            </label>
-
-            <label className="block">
-              <span className="mb-2 block text-sm font-black text-neutral-800">
-                Video URL
-              </span>
-              <input
-                type="url"
-                value={videoUrl}
-                onChange={(event) => setVideoUrl(event.target.value)}
-                placeholder="YouTube, Vimeo, or direct .mp4 URL"
-                className="w-full rounded-[8px] border border-neutral-950/20 bg-white px-4 py-3 font-bold outline-none transition focus:border-neutral-950 focus:ring-4 focus:ring-yellow-500/25"
-              />
-            </label>
-
-            <label className="block">
-              <span className="mb-2 block text-sm font-black text-neutral-800">
-                Thumbnail URL
-              </span>
-              <div className="flex flex-col gap-2 sm:flex-row">
-                <input
-                  type="url"
-                  value={poster}
-                  onChange={(event) => setPoster(event.target.value)}
-                  placeholder="Optional image URL"
-                  className="min-w-0 flex-1 rounded-[8px] border border-neutral-950/20 bg-white px-4 py-3 font-bold outline-none transition focus:border-neutral-950 focus:ring-4 focus:ring-yellow-500/25"
-                />
-                {getYouTubeId(videoUrl) ? (
+              <div className="grid gap-2">
+                {videoItems.map((video) => (
                   <button
                     type="button"
-                    onClick={() =>
-                      setPoster(`https://img.youtube.com/vi/${getYouTubeId(videoUrl)}/hqdefault.jpg`)
-                    }
-                    className="inline-flex items-center justify-center gap-2 rounded-[8px] bg-yellow-300 px-4 py-3 font-black text-neutral-950"
+                    draggable
+                    key={video.id}
+                    onDragStart={() => setDraggedId(video.id)}
+                    onDragOver={(event) => event.preventDefault()}
+                    onDrop={() => handleDrop(video.id)}
+                    onClick={() => setSelectedId(video.id)}
+                    className={`flex min-h-[52px] items-center justify-between rounded-[8px] border px-3 py-2 text-left text-sm font-black transition ${
+                      selectedId === video.id
+                        ? "border-neutral-950 bg-yellow-300"
+                        : "border-neutral-950/15 bg-white hover:border-neutral-950"
+                    }`}
                   >
-                    <Sparkles size={18} />
-                    YouTube thumb
+                    <span className="flex min-w-0 items-center gap-2">
+                      <GripVertical size={16} className="shrink-0" />
+                      <span className="truncate">{video.title || `Video ${video.id}`}</span>
+                    </span>
+                    <span className="shrink-0">
+                      {video.hidden ? <EyeOff size={16} /> : <Eye size={16} />}
+                    </span>
                   </button>
-                ) : null}
+                ))}
               </div>
-            </label>
 
-            {poster || getDefaultPoster({ poster, src: videoUrl }) ? (
-              <div className="rounded-[8px] border border-neutral-950/15 bg-white/80 p-4">
-                <p className="mb-3 text-sm font-black text-neutral-800">
-                  Thumbnail
-                </p>
+              <label className="block">
+                <span className="mb-2 block text-sm font-black text-neutral-800">
+                  Instagram Reel link
+                </span>
+                <input
+                  type="url"
+                  value={videoUrl}
+                  onChange={(event) => setVideoUrl(event.target.value)}
+                  placeholder="https://www.instagram.com/reel/..."
+                  className="w-full rounded-[8px] border border-neutral-950/20 bg-white px-4 py-4 text-base font-bold outline-none transition focus:border-neutral-950 focus:ring-4 focus:ring-yellow-500/25"
+                />
+              </label>
+
+              <label className="block">
+                <span className="mb-2 block text-sm font-black text-neutral-800">
+                  Title
+                </span>
+                <input
+                  type="text"
+                  value={title}
+                  onChange={(event) => setTitle(event.target.value)}
+                  placeholder="Optional title under the phone"
+                  className="w-full rounded-[8px] border border-neutral-950/20 bg-white px-4 py-3 font-bold outline-none transition focus:border-neutral-950 focus:ring-4 focus:ring-yellow-500/25"
+                />
+              </label>
+
+              <details className="rounded-[8px] border border-neutral-950/15 bg-white/80 p-3">
+                <summary className="cursor-pointer text-sm font-black text-neutral-800">
+                  More options
+                </summary>
+                <div className="mt-4 space-y-4">
+                  <label className="block">
+                    <span className="mb-2 block text-sm font-black text-neutral-800">
+                      Thumbnail image URL
+                    </span>
+                    <input
+                      type="url"
+                      value={poster}
+                      onChange={(event) => setPoster(event.target.value)}
+                      placeholder="Optional"
+                      className="w-full rounded-[8px] border border-neutral-950/20 bg-white px-4 py-3 font-bold outline-none transition focus:border-neutral-950 focus:ring-4 focus:ring-yellow-500/25"
+                    />
+                  </label>
+                  <div className="flex flex-wrap gap-3">
+                    <button
+                      type="button"
+                      onClick={() => selectedVideo && handleToggleHidden(selectedVideo)}
+                      className="inline-flex items-center gap-2 rounded-[8px] border border-neutral-950/20 bg-white px-4 py-3 font-black"
+                    >
+                      {selectedVideo?.hidden ? <Eye size={18} /> : <EyeOff size={18} />}
+                      {selectedVideo?.hidden ? "Show video" : "Hide video"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleDeleteSlot}
+                      disabled={deleting}
+                      className="inline-flex items-center gap-2 rounded-[8px] bg-red-700 px-4 py-3 font-black text-white disabled:opacity-60"
+                    >
+                      {deleting ? <Spinner /> : <Trash2 size={18} />}
+                      Delete
+                    </button>
+                  </div>
+                </div>
+              </details>
+
+              {poster || getDefaultPoster({ poster, src: videoUrl }) ? (
                 <img
                   src={poster || getDefaultPoster({ poster, src: videoUrl })}
                   alt="Selected video thumbnail"
                   className="h-28 w-full rounded-[8px] object-cover"
                 />
-              </div>
-            ) : null}
+              ) : null}
 
-            {saveError ? (
-              <p className="text-sm font-bold text-red-700">{saveError}</p>
-            ) : null}
+              {saveError ? (
+                <p className="text-sm font-bold text-red-700">{saveError}</p>
+              ) : null}
 
-            <button
-              type="submit"
-              disabled={saving}
-              className="flex w-full items-center justify-center gap-2 rounded-[8px] bg-neutral-950 px-5 py-4 font-black text-white transition hover:bg-neutral-800"
-            >
-              {saving ? <Spinner /> : <Save size={18} className="text-yellow-300" />}
-              {saving ? "Saving..." : "Save changes live"}
-            </button>
-          </form>
+              <button
+                type="submit"
+                disabled={saving}
+                className="flex w-full items-center justify-center gap-2 rounded-[8px] bg-neutral-950 px-5 py-4 font-black text-white transition hover:bg-neutral-800"
+              >
+                {saving ? <Spinner /> : <Save size={18} className="text-yellow-300" />}
+                {saving ? "Saving..." : "Save Video"}
+              </button>
+            </form>
           </div>
         )}
       </div>
