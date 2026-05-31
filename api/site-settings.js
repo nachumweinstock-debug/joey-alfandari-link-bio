@@ -52,7 +52,7 @@ module.exports = async function handler(request, response) {
   } catch (error) {
     return response.status(500).json({
       error:
-        process.env.BLOB_READ_WRITE_TOKEN || process.env.BLOB_STORE_ID
+        process.env.GITHUB_TOKEN || process.env.GH_TOKEN
           ? "Site settings failed"
           : "Site settings storage is not configured",
       fallback: defaultSiteSettings,

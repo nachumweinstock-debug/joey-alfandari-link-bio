@@ -1,5 +1,4 @@
-import { useEffect, useRef, useState } from "react";
-import { upload } from "@vercel/blob/client";
+import { useEffect, useState } from "react";
 import {
   ArrowUpRight,
   Clapperboard,
@@ -17,7 +16,6 @@ import {
   Save,
   Sparkles,
   Trash2,
-  Upload,
   X,
 } from "lucide-react";
 
@@ -67,7 +65,7 @@ const defaultVideoSlots = [
     id: 1,
     hidden: false,
     order: 1,
-    title: "Upload video one",
+    title: "Add video URL",
     poster: "",
     src: "",
   },
@@ -109,6 +107,46 @@ function Spinner() {
   return <Loader2 size={18} className="animate-spin" />;
 }
 
+function getYouTubeId(url) {
+  try {
+    const parsed = new URL(url);
+    if (parsed.hostname.includes("youtu.be")) return parsed.pathname.split("/").filter(Boolean)[0];
+    if (!parsed.hostname.includes("youtube.com")) return "";
+    if (parsed.pathname.startsWith("/shorts/")) return parsed.pathname.split("/")[2];
+    if (parsed.pathname.startsWith("/embed/")) return parsed.pathname.split("/")[2];
+    return parsed.searchParams.get("v") || "";
+  } catch {
+    return "";
+  }
+}
+
+function getVimeoId(url) {
+  try {
+    const parsed = new URL(url);
+    if (!parsed.hostname.includes("vimeo.com")) return "";
+    return parsed.pathname.split("/").filter(Boolean).pop() || "";
+  } catch {
+    return "";
+  }
+}
+
+function getEmbedUrl(url) {
+  const youtubeId = getYouTubeId(url);
+  if (youtubeId) return `https://www.youtube.com/embed/${youtubeId}`;
+
+  const vimeoId = getVimeoId(url);
+  if (vimeoId) return `https://player.vimeo.com/video/${vimeoId}`;
+
+  return "";
+}
+
+function getDefaultPoster(video) {
+  if (video.poster) return video.poster;
+  const youtubeId = getYouTubeId(video.src);
+  if (youtubeId) return `https://img.youtube.com/vi/${youtubeId}/hqdefault.jpg`;
+  return "";
+}
+
 function LinkCard({ icon: Icon, label, url, variant = "light" }) {
   const isDark = variant === "dark";
 
@@ -146,18 +184,42 @@ function LinkCard({ icon: Icon, label, url, variant = "light" }) {
 }
 
 function IPhoneVideo({ onOpen, poster, src, title }) {
-  const hasPoster = Boolean(poster);
+  const embedUrl = getEmbedUrl(src);
+  const posterUrl = poster || getDefaultPoster({ poster, src });
+  const hasPoster = Boolean(posterUrl);
   return (
     <article className="group">
       <div className="mx-auto w-full max-w-[320px] rounded-[46px] bg-neutral-950 p-3 shadow-[0_30px_80px_rgba(23,23,23,0.28)] transition duration-300 group-hover:-translate-y-2">
         <div className="relative overflow-hidden rounded-[32px] bg-neutral-900">
           <div className="absolute left-1/2 top-0 z-20 h-6 w-28 -translate-x-1/2 rounded-b-2xl bg-neutral-950" />
           <div className="aspect-[9/16]">
-            {src ? (
+            {embedUrl ? (
+              <button
+                type="button"
+                onClick={onOpen}
+                className="relative h-full w-full bg-black text-white"
+                aria-label={`Open ${title}`}
+              >
+                {hasPoster ? (
+                  <img
+                    src={posterUrl}
+                    alt=""
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <div className="h-full bg-[radial-gradient(circle_at_30%_18%,#fff0a3_0%,#f5b700_28%,#161616_72%)]" />
+                )}
+                <span className="absolute inset-0 flex items-center justify-center bg-black/20">
+                  <span className="flex size-20 items-center justify-center rounded-full bg-white/95 text-neutral-950 shadow-[0_18px_45px_rgba(0,0,0,0.3)]">
+                    <Play size={34} fill="currentColor" />
+                  </span>
+                </span>
+              </button>
+            ) : src ? (
               <div className="relative h-full bg-black">
                 <video
                   src={src}
-                  poster={poster || undefined}
+                  poster={posterUrl || undefined}
                   controls
                   playsInline
                   preload="metadata"
@@ -175,7 +237,7 @@ function IPhoneVideo({ onOpen, poster, src, title }) {
             ) : (
               <div
                 className="flex h-full items-center justify-center bg-[radial-gradient(circle_at_30%_18%,#fff0a3_0%,#f5b700_28%,#161616_72%)] bg-cover bg-center text-neutral-950"
-                style={hasPoster ? { backgroundImage: `url(${poster})` } : undefined}
+                style={hasPoster ? { backgroundImage: `url(${posterUrl})` } : undefined}
               >
                 {!hasPoster ? (
                   <div className="text-center">
@@ -205,6 +267,7 @@ function IPhoneVideo({ onOpen, poster, src, title }) {
 
 function VideoLightbox({ onClose, video }) {
   if (!video) return null;
+  const embedUrl = getEmbedUrl(video.src);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-neutral-950/90 p-4">
@@ -217,14 +280,24 @@ function VideoLightbox({ onClose, video }) {
         <X size={22} />
       </button>
       <div className="h-full max-h-[88vh] w-full max-w-5xl">
-        <video
-          src={video.src}
-          poster={video.poster || undefined}
-          controls
-          autoPlay
-          playsInline
-          className="h-full w-full rounded-[12px] bg-black object-contain"
-        />
+        {embedUrl ? (
+          <iframe
+            src={`${embedUrl}${embedUrl.includes("?") ? "&" : "?"}autoplay=1`}
+            title={video.title}
+            allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
+            allowFullScreen
+            className="h-full w-full rounded-[12px] bg-black"
+          />
+        ) : (
+          <video
+            src={video.src}
+            poster={getDefaultPoster(video) || undefined}
+            controls
+            autoPlay
+            playsInline
+            className="h-full w-full rounded-[12px] bg-black object-contain"
+          />
+        )}
       </div>
     </div>
   );
@@ -238,29 +311,24 @@ function AdminPanel({
   onSave,
   onSaveSettings,
   onToggleHidden,
-  onUploadAsset,
   settings,
   unlocked,
   setUnlocked,
   videoItems,
 }) {
-  const frameVideoRef = useRef(null);
   const [password, setPassword] = useState("");
   const [passwordError, setPasswordError] = useState("");
   const [selectedId, setSelectedId] = useState(1);
   const selectedVideo = videoItems.find((video) => video.id === selectedId);
   const [title, setTitle] = useState(selectedVideo?.title || "");
-  const [file, setFile] = useState(null);
-  const [filePreviewUrl, setFilePreviewUrl] = useState("");
   const [poster, setPoster] = useState(selectedVideo?.poster || "");
+  const [videoUrl, setVideoUrl] = useState(selectedVideo?.src || "");
   const [adding, setAdding] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [draggedId, setDraggedId] = useState(null);
   const [previewMode, setPreviewMode] = useState(false);
   const [saving, setSaving] = useState(false);
   const [settingsSaving, setSettingsSaving] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState(0);
-  const [profileProgress, setProfileProgress] = useState(0);
   const [saveError, setSaveError] = useState("");
   const [settingsError, setSettingsError] = useState("");
   const [handle, setHandle] = useState(settings.handle);
@@ -268,24 +336,20 @@ function AdminPanel({
   const [metaDescription, setMetaDescription] = useState(settings.metaDescription);
   const [metaTitle, setMetaTitle] = useState(settings.metaTitle);
   const [name, setName] = useState(settings.name);
-  const [profileFile, setProfileFile] = useState(null);
   const [profilePhotoUrl, setProfilePhotoUrl] = useState(settings.profilePhotoUrl);
-  const [profilePreviewUrl, setProfilePreviewUrl] = useState("");
   const [tagline, setTagline] = useState(settings.tagline);
   const [bio, setBio] = useState(settings.bio);
   const [toast, setToast] = useState(null);
   const [videoEyebrow, setVideoEyebrow] = useState(settings.videoEyebrow);
   const [videoHeadline, setVideoHeadline] = useState(settings.videoHeadline);
   const bioParagraphs = getBioParagraphs(bio);
-  const frameSource = filePreviewUrl || selectedVideo?.src || "";
 
   useEffect(() => {
     setTitle(selectedVideo?.title || "");
-    setFile(null);
     setPoster(selectedVideo?.poster || "");
+    setVideoUrl(selectedVideo?.src || "");
     setSaveError("");
-    setUploadProgress(0);
-  }, [selectedId, selectedVideo?.poster, selectedVideo?.title]);
+  }, [selectedId, selectedVideo?.poster, selectedVideo?.src, selectedVideo?.title]);
 
   useEffect(() => {
     setHandle(settings.handle);
@@ -301,30 +365,6 @@ function AdminPanel({
     setSettingsError("");
   }, [settings]);
 
-  useEffect(() => {
-    if (!file) {
-      setFilePreviewUrl("");
-      return undefined;
-    }
-
-    const nextUrl = URL.createObjectURL(file);
-    setFilePreviewUrl(nextUrl);
-
-    return () => URL.revokeObjectURL(nextUrl);
-  }, [file]);
-
-  useEffect(() => {
-    if (!profileFile) {
-      setProfilePreviewUrl("");
-      return undefined;
-    }
-
-    const nextUrl = URL.createObjectURL(profileFile);
-    setProfilePreviewUrl(nextUrl);
-
-    return () => URL.revokeObjectURL(nextUrl);
-  }, [profileFile]);
-
   function showToast(type, message) {
     setToast({ id: Date.now(), message, type });
   }
@@ -337,7 +377,7 @@ function AdminPanel({
       metaDescription,
       metaTitle,
       name,
-      profilePhotoUrl: profilePreviewUrl || profilePhotoUrl,
+      profilePhotoUrl,
       tagline,
       videoEyebrow,
       videoHeadline,
@@ -372,16 +412,14 @@ function AdminPanel({
       const nextTitle = title;
 
       await onSave({
-        file,
         hidden: Boolean(selectedVideo?.hidden),
         id: selectedId,
         password,
         poster,
-        setUploadProgress,
+        src: videoUrl,
         title: nextTitle,
       });
       setTitle(nextTitle);
-      setFile(null);
       showToast("success", "Video saved live.");
     } catch (error) {
       const message = error?.message || "Save failed.";
@@ -389,7 +427,6 @@ function AdminPanel({
       showToast("error", message);
     } finally {
       setSaving(false);
-      setUploadProgress(0);
     }
   }
 
@@ -399,10 +436,6 @@ function AdminPanel({
     setSettingsError("");
 
     try {
-      let nextProfilePhotoUrl = profilePhotoUrl;
-      if (profileFile) {
-        nextProfilePhotoUrl = await onUploadAsset(profileFile, password, setProfileProgress);
-      }
       await onSaveSettings({
         bio,
         handle,
@@ -411,13 +444,11 @@ function AdminPanel({
         metaTitle,
         name,
         password,
-        profilePhotoUrl: nextProfilePhotoUrl,
+        profilePhotoUrl,
         tagline,
         videoEyebrow,
         videoHeadline,
       });
-      setProfileFile(null);
-      setProfilePhotoUrl(nextProfilePhotoUrl);
       showToast("success", "Site settings saved live.");
     } catch (error) {
       const message = error?.message || "Site settings save failed.";
@@ -425,31 +456,6 @@ function AdminPanel({
       showToast("error", message);
     } finally {
       setSettingsSaving(false);
-      setProfileProgress(0);
-    }
-  }
-
-  function captureCurrentFrame() {
-    const video = frameVideoRef.current;
-    if (!video || !video.videoWidth || !video.videoHeight) {
-      setSaveError("Load the video first, then choose a frame.");
-      return;
-    }
-
-    const canvas = document.createElement("canvas");
-    const maxWidth = 720;
-    const scale = Math.min(1, maxWidth / video.videoWidth);
-    canvas.width = Math.round(video.videoWidth * scale);
-    canvas.height = Math.round(video.videoHeight * scale);
-    const context = canvas.getContext("2d");
-    try {
-      context.drawImage(video, 0, 0, canvas.width, canvas.height);
-      setPoster(canvas.toDataURL("image/jpeg", 0.82));
-      setSaveError("");
-    } catch {
-      setSaveError(
-        "This video source does not allow frame capture. Upload a replacement video or use a newly uploaded file to pick a thumbnail."
-      );
     }
   }
 
@@ -641,31 +647,21 @@ function AdminPanel({
               </label>
               <label className="block">
                 <span className="mb-2 block text-sm font-black text-neutral-800">
-                  Profile photo
+                  Profile photo URL
                 </span>
                 <input
-                  type="file"
-                  accept="image/*"
-                  onChange={(event) => setProfileFile(event.target.files?.[0] || null)}
-                  className="w-full rounded-[8px] border border-neutral-950/20 bg-white px-4 py-3 font-bold"
+                  type="url"
+                  value={profilePhotoUrl}
+                  onChange={(event) => setProfilePhotoUrl(event.target.value)}
+                  placeholder="https://..."
+                  className="w-full rounded-[8px] border border-neutral-950/20 bg-white px-4 py-3 font-bold outline-none transition focus:border-neutral-950 focus:ring-4 focus:ring-yellow-500/25"
                 />
                 <img
-                  src={profilePreviewUrl || profilePhotoUrl}
+                  src={profilePhotoUrl}
                   alt="Profile preview"
                   className="mt-3 aspect-[1600/657] w-full rounded-[8px] object-cover"
                 />
               </label>
-              {profileProgress > 0 ? (
-                <div>
-                  <div className="h-3 overflow-hidden rounded-full bg-neutral-200">
-                    <div
-                      className="h-full bg-yellow-400"
-                      style={{ width: `${profileProgress}%` }}
-                    />
-                  </div>
-                  <p className="mt-1 text-xs font-bold">{profileProgress}% uploaded</p>
-                </div>
-              ) : null}
               <label className="block">
                 <span className="mb-2 block text-sm font-black text-neutral-800">
                   Handle
@@ -897,66 +893,56 @@ function AdminPanel({
               />
             </label>
 
-            <label className="block cursor-pointer rounded-[8px] border border-dashed border-neutral-950/30 bg-white/80 p-5 text-center font-black transition hover:border-neutral-950 hover:bg-white">
-              <Upload className="mx-auto mb-2 text-yellow-700" size={24} />
-              {file ? file.name : "Choose video for this slot"}
+            <label className="block">
+              <span className="mb-2 block text-sm font-black text-neutral-800">
+                Video URL
+              </span>
               <input
-                type="file"
-                accept="video/*"
-                onChange={(event) => {
-                  setFile(event.target.files?.[0] || null);
-                  setPoster("");
-                }}
-                className="sr-only"
+                type="url"
+                value={videoUrl}
+                onChange={(event) => setVideoUrl(event.target.value)}
+                placeholder="YouTube, Vimeo, or direct .mp4 URL"
+                className="w-full rounded-[8px] border border-neutral-950/20 bg-white px-4 py-3 font-bold outline-none transition focus:border-neutral-950 focus:ring-4 focus:ring-yellow-500/25"
               />
             </label>
 
-            {frameSource ? (
-              <div className="rounded-[8px] border border-neutral-950/15 bg-white/80 p-4">
-                <p className="mb-3 text-sm font-black text-neutral-800">
-                  {filePreviewUrl
-                    ? "Choose a thumbnail from the new video"
-                    : "Choose a new thumbnail from the uploaded video"}
-                </p>
-                <video
-                  ref={frameVideoRef}
-                  src={frameSource}
-                  crossOrigin="anonymous"
-                  controls
-                  playsInline
-                  className="mx-auto aspect-[9/16] max-h-[240px] rounded-[8px] bg-black object-contain sm:max-h-[300px]"
+            <label className="block">
+              <span className="mb-2 block text-sm font-black text-neutral-800">
+                Thumbnail URL
+              </span>
+              <div className="flex flex-col gap-2 sm:flex-row">
+                <input
+                  type="url"
+                  value={poster}
+                  onChange={(event) => setPoster(event.target.value)}
+                  placeholder="Optional image URL"
+                  className="min-w-0 flex-1 rounded-[8px] border border-neutral-950/20 bg-white px-4 py-3 font-bold outline-none transition focus:border-neutral-950 focus:ring-4 focus:ring-yellow-500/25"
                 />
-                <button
-                  type="button"
-                  onClick={captureCurrentFrame}
-                  className="mt-3 w-full rounded-[8px] bg-yellow-300 px-4 py-3 font-black text-neutral-950 transition hover:-translate-y-0.5"
-                >
-                  Use Current Frame as Thumbnail
-                </button>
+                {getYouTubeId(videoUrl) ? (
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setPoster(`https://img.youtube.com/vi/${getYouTubeId(videoUrl)}/hqdefault.jpg`)
+                    }
+                    className="inline-flex items-center justify-center gap-2 rounded-[8px] bg-yellow-300 px-4 py-3 font-black text-neutral-950"
+                  >
+                    <Sparkles size={18} />
+                    YouTube thumb
+                  </button>
+                ) : null}
               </div>
-            ) : null}
+            </label>
 
-            {poster ? (
+            {poster || getDefaultPoster({ poster, src: videoUrl }) ? (
               <div className="rounded-[8px] border border-neutral-950/15 bg-white/80 p-4">
                 <p className="mb-3 text-sm font-black text-neutral-800">
                   Thumbnail
                 </p>
                 <img
-                  src={poster}
+                  src={poster || getDefaultPoster({ poster, src: videoUrl })}
                   alt="Selected video thumbnail"
                   className="h-28 w-full rounded-[8px] object-cover"
                 />
-              </div>
-            ) : null}
-            {uploadProgress > 0 ? (
-              <div>
-                <div className="h-3 overflow-hidden rounded-full bg-neutral-200">
-                  <div
-                    className="h-full bg-yellow-400"
-                    style={{ width: `${uploadProgress}%` }}
-                  />
-                </div>
-                <p className="mt-1 text-xs font-bold">{uploadProgress}% uploaded</p>
               </div>
             ) : null}
 
@@ -1033,27 +1019,7 @@ export default function App() {
     };
   }, []);
 
-  async function handleVideoSave({ file, hidden, id, password, poster, setUploadProgress, title }) {
-    let uploadedUrl;
-
-    if (file) {
-      const safeName = file.name.replace(/[^a-z0-9._-]/gi, "-").toLowerCase();
-      const blob = await upload(`brave-spark/videos/slot-${id}-${safeName}`, file, {
-        access: "public",
-        handleUploadUrl: "/api/blob-upload",
-        multipart: true,
-        onUploadProgress: ({ percentage }) => {
-          setUploadProgress?.(Math.round(percentage));
-        },
-        clientPayload: JSON.stringify({
-          id,
-          password,
-          title,
-        }),
-      });
-      uploadedUrl = blob.url;
-    }
-
+  async function handleVideoSave({ hidden, id, password, poster, src, title }) {
     const response = await fetch("/api/videos", {
       method: "POST",
       headers: {
@@ -1064,7 +1030,7 @@ export default function App() {
         id,
         password,
         poster,
-        src: uploadedUrl,
+        src,
         title,
       }),
     });
@@ -1137,19 +1103,6 @@ export default function App() {
     const data = await response.json();
     if (!response.ok) throw new Error(data.error || "Could not update visibility.");
     setVideoItems(data.videos || defaultVideoSlots);
-  }
-
-  async function handleAssetUpload(file, password, setProgress) {
-    const safeName = file.name.replace(/[^a-z0-9._-]/gi, "-").toLowerCase();
-    const blob = await upload(`brave-spark/assets/${Date.now()}-${safeName}`, file, {
-      access: "public",
-      handleUploadUrl: "/api/asset-upload",
-      onUploadProgress: ({ percentage }) => {
-        setProgress?.(Math.round(percentage));
-      },
-      clientPayload: JSON.stringify({ password }),
-    });
-    return blob.url;
   }
 
   async function handleSettingsSave({
@@ -1312,7 +1265,6 @@ export default function App() {
           onSave={handleVideoSave}
           onSaveSettings={handleSettingsSave}
           onToggleHidden={handleToggleVideoHidden}
-          onUploadAsset={handleAssetUpload}
           settings={siteSettings}
           setUnlocked={setAdminUnlocked}
           unlocked={adminUnlocked}

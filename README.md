@@ -1,23 +1,27 @@
 # Brave Spark Link Bio
 
-Single-page React + Tailwind link-in-bio / portfolio site for Brave Spark, backed by Vercel Blob for live admin edits.
+Single-page React + Tailwind link-in-bio / portfolio site for Brave Spark. Videos are embedded from external platforms instead of being hosted by the site.
 
 ## Stack
 
 - Vite, React, Tailwind CSS
 - Vercel serverless API routes
-- Vercel Blob for shared site settings, profile photo uploads, videos, posters, and the video manifest
+- GitHub Contents API for small editable JSON data
+- YouTube, Vimeo, or direct video URLs for video playback
 
 ## Environment Variables
 
 Set these in Vercel for production, preview, and local development:
 
 ```bash
-BLOB_READ_WRITE_TOKEN=...
 ADMIN_PASSWORD=...
+GITHUB_TOKEN=...
+GITHUB_REPO=nachumweinstock-debug/joey-alfandari-link-bio
+GITHUB_DATA_BRANCH=main
 ```
 
 `ADMIN_PASSWORD` controls the protected admin panel and upload APIs. The password is intentionally not stored in source code.
+`GITHUB_TOKEN` needs repo contents read/write access. `GITHUB_REPO` and `GITHUB_DATA_BRANCH` are optional if Vercel's Git metadata points at the correct repo and branch.
 
 ## Local Development
 
@@ -33,17 +37,16 @@ For local API testing with Vercel routes, use `vercel dev` with the same environ
 1. Open the live site.
 2. Click the footer fire emoji.
 3. Enter the admin password from `ADMIN_PASSWORD`.
-4. Use **Site Controls** to edit the account name, handle, tagline, bio, hero links, profile photo, video section copy, page title, and meta description.
+4. Use **Site Controls** to edit the account name, handle, tagline, bio, hero links, profile photo URL, video section copy, page title, and meta description.
 5. Use the bio helper to check character count, paragraph count, and the exact rendered preview before saving.
-6. Use **Video Slots** to add, delete, hide/show, drag reorder, edit titles, upload videos, and choose a poster frame.
+6. Use **Video Slots** to add, delete, hide/show, drag reorder, edit titles, paste YouTube/Vimeo/direct video URLs, and set optional thumbnail URLs.
 7. Save each change and wait for the success toast before closing the tab.
 
-## Blob Data
+## GitHub Data
 
-- Site settings: `brave-spark/site-settings.json`
-- Video manifest: `brave-spark/videos.json`
-- Video files and generated posters: stored as public Vercel Blob assets
-- Profile photo uploads: stored as public Vercel Blob assets
+- Site settings: `data/site-settings.json`
+- Video manifest: `data/videos-manifest.json`
+- Media files are not stored in this repo or in Vercel.
 
 ## Deployment
 

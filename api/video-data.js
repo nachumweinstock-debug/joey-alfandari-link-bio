@@ -1,11 +1,13 @@
-const manifestPath = "brave-spark/videos-manifest.json";
+const { readJson, writeJson } = require("./github-data");
+
+const manifestPath = "data/videos-manifest.json";
 
 const defaultVideoSlots = [
   {
     id: 1,
     hidden: false,
     order: 1,
-    title: "Upload video one",
+    title: "Add video URL",
     poster: "",
     src: "",
   },
@@ -75,37 +77,23 @@ function mergeManifest(records = []) {
 }
 
 async function readManifest() {
-  const { get } = require("@vercel/blob");
-
   try {
-    const result = await get(manifestPath, { access: "public" });
-    if (!result?.stream) return defaultVideoSlots;
-
-    const text = await new Response(result.stream).text();
-    const parsed = JSON.parse(text);
+    const parsed = await readJson(manifestPath, defaultVideoSlots);
     return mergeManifest(Array.isArray(parsed) ? parsed : []);
   } catch (error) {
-    if (error?.message?.includes("No token")) throw error;
+    if (error?.message?.includes("GitHub")) throw error;
     return defaultVideoSlots;
   }
 }
 
 async function writeManifest(records) {
-  const { put } = require("@vercel/blob");
   const manifest = mergeManifest(records);
   const tombstones = records
     .filter((item) => item?.deleted)
     .map((item) => ({ deleted: true, id: Number(item.id) }))
     .filter((item) => item.id);
   const storedManifest = [...manifest, ...tombstones];
-
-  await put(manifestPath, JSON.stringify(storedManifest, null, 2), {
-    access: "public",
-    allowOverwrite: true,
-    contentType: "application/json",
-    cacheControlMaxAge: 0,
-  });
-
+  await writeJson(manifestPath, storedManifest);
   return manifest;
 }
 

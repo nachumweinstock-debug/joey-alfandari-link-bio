@@ -1,4 +1,6 @@
-const settingsPath = "brave-spark/site-settings.json";
+const { readJson, writeJson } = require("./github-data");
+
+const settingsPath = "data/site-settings.json";
 
 const defaultSiteSettings = {
   profilePhotoUrl: "/profile-photo.jpg",
@@ -70,32 +72,17 @@ function cleanSettings(record = {}) {
 }
 
 async function readSettings() {
-  const { get } = require("@vercel/blob");
-
   try {
-    const result = await get(settingsPath, { access: "public" });
-    if (!result?.stream) return defaultSiteSettings;
-
-    const text = await new Response(result.stream).text();
-    return cleanSettings(JSON.parse(text));
+    return cleanSettings(await readJson(settingsPath, defaultSiteSettings));
   } catch (error) {
-    if (error?.message?.includes("No token")) throw error;
+    if (error?.message?.includes("GitHub")) throw error;
     return defaultSiteSettings;
   }
 }
 
 async function writeSettings(record) {
-  const { put } = require("@vercel/blob");
   const settings = cleanSettings(record);
-
-  await put(settingsPath, JSON.stringify(settings, null, 2), {
-    access: "public",
-    allowOverwrite: true,
-    contentType: "application/json",
-    cacheControlMaxAge: 0,
-  });
-
-  return settings;
+  return writeJson(settingsPath, settings);
 }
 
 module.exports = {

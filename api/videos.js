@@ -9,27 +9,7 @@ async function storePosterIfNeeded(poster, slotId) {
   if (typeof poster !== "string") return undefined;
   if (!poster.startsWith("data:image/")) return poster;
 
-  const match = poster.match(/^data:(image\/(?:jpeg|jpg|png|webp));base64,(.+)$/);
-  if (!match) return "";
-
-  const [, contentType, base64] = match;
-  const extension = contentType.includes("png")
-    ? "png"
-    : contentType.includes("webp")
-      ? "webp"
-      : "jpg";
-  const { put } = require("@vercel/blob");
-  const blob = await put(
-    `brave-spark/posters/slot-${slotId}-${Date.now()}.${extension}`,
-    Buffer.from(base64, "base64"),
-    {
-      access: "public",
-      addRandomSuffix: true,
-      contentType,
-    }
-  );
-
-  return blob.url;
+  return "";
 }
 
 module.exports = async function handler(request, response) {
@@ -37,7 +17,7 @@ module.exports = async function handler(request, response) {
     if (request.method === "GET") {
       const videos = await readManifest();
       response.setHeader("Cache-Control", "no-store");
-      return response.status(200).json({ storage: "blob", videos });
+      return response.status(200).json({ storage: "github", videos });
     }
 
     if (request.method === "POST") {
@@ -64,7 +44,7 @@ module.exports = async function handler(request, response) {
           },
         ];
         const videos = await writeManifest(next);
-        return response.status(200).json({ addedId: nextId, storage: "blob", videos });
+        return response.status(200).json({ addedId: nextId, storage: "github", videos });
       }
 
       if (action === "normalize-posters") {
@@ -78,7 +58,7 @@ module.exports = async function handler(request, response) {
           }))
         );
         const videos = await writeManifest(next);
-        return response.status(200).json({ storage: "blob", videos });
+        return response.status(200).json({ storage: "github", videos });
       }
 
       if (action === "delete") {
@@ -87,7 +67,7 @@ module.exports = async function handler(request, response) {
           ? [...current.filter((slot) => slot.id !== slotId), { deleted: true, id: slotId }]
           : current.filter((slot) => slot.id !== slotId);
         const videos = await writeManifest(next);
-        return response.status(200).json({ storage: "blob", videos });
+        return response.status(200).json({ storage: "github", videos });
       }
 
       if (action === "reorder") {
@@ -102,7 +82,7 @@ module.exports = async function handler(request, response) {
           order: orderMap.get(Number(slot.id)) || slot.order || slot.id,
         }));
         const videos = await writeManifest(next);
-        return response.status(200).json({ storage: "blob", videos });
+        return response.status(200).json({ storage: "github", videos });
       }
 
       const slotId = Number(id);
@@ -141,7 +121,7 @@ module.exports = async function handler(request, response) {
           ];
 
       const videos = await writeManifest(next);
-      return response.status(200).json({ storage: "blob", videos });
+      return response.status(200).json({ storage: "github", videos });
     }
 
     response.setHeader("Allow", "GET, POST");
@@ -149,7 +129,7 @@ module.exports = async function handler(request, response) {
   } catch (error) {
     return response.status(500).json({
       error:
-        process.env.BLOB_READ_WRITE_TOKEN || process.env.BLOB_STORE_ID
+        process.env.GITHUB_TOKEN || process.env.GH_TOKEN
           ? "Video storage failed"
           : "Video storage is not configured",
       fallback: defaultVideoSlots,
