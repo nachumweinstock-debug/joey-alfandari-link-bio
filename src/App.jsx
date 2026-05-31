@@ -1255,7 +1255,7 @@ export default function App() {
           </div>
 
           <div className="grid gap-10 md:grid-cols-3">
-            {videoItems.filter((video) => !video.hidden).map((video) => (
+            {videoItems.filter((video) => !video.hidden && video.src).map((video) => (
               <IPhoneVideo
                 key={video.id}
                 {...video}

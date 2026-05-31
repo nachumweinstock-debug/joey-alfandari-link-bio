@@ -1,0 +1,25 @@
+{
+  "profilePhotoUrl": "/profile-photo.jpg",
+  "handle": "@brave_spark_",
+  "name": "Brave Spark",
+  "tagline": "Motivation, mindset, and \nreal-life growth\n with a human punch.",
+  "metaTitle": "Brave Spark | @brave_spark_",
+  "metaDescription": "Brave Spark, @brave_spark_, motivation, mindset, and creative video work.",
+  "videoEyebrow": "Video Work",
+  "videoHeadline": "WELCOME TO MY PORTFOLIO ",
+  "links": [
+    {
+      "id": "instagram",
+      "label": "Instagram",
+      "url": "https://www.instagram.com/brave_spark_/",
+      "variant": "light"
+    },
+    {
+      "id": "contact",
+      "label": "Contact",
+      "url": "https://docs.google.com/forms/d/e/1FAIpQLSc_jZ6p4xNrtJxUqtxWcUkvZHlnmYXX48O3-wG4J_oe5H0Oug/viewform?usp=publish-editor",
+      "variant": "dark"
+    }
+  ],
+  "bio": "I’m Joey Alfandari ,43, creator based in Long Island, New York.\n\nI create UGC that makes motivation feel real again rooted in everyday life, not empty inspiration. My work blends storytelling, humor, and honest vulnerability with messages that speak to people going through actual things, not just scrolling for motivation.\n\nI don’t focus on perfect or overly polished content. I focus on truth, timing, and emotion capturing real moments and turning them into content that feels human, relatable, and effective.\n\nIf it’s authentic, a little raw, and leaves people thinking after the scroll that’s where Brave Spark comes alive."
+}
