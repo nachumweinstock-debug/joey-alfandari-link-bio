@@ -65,19 +65,19 @@
   },
   {
     "hidden": false,
-    "id": 7,
-    "order": 9,
-    "poster": "https://jypakwwtmsyvtk8u.public.blob.vercel-storage.com/brave-spark/posters/slot-7-1779570489583-Pu9aXaNeAmgHDNXyFsC8tvMUzActC7.jpg",
-    "src": "https://jypakwwtmsyvtk8u.public.blob.vercel-storage.com/brave-spark/videos/slot-7-video-by-brave_spark_-4-2p3wq1lVLMlOArOyKi5X0IudZlVwgM.mp4",
-    "title": "Talking head"
-  },
-  {
-    "hidden": false,
     "id": 8,
-    "order": 10,
+    "order": 9,
     "poster": "",
     "src": "https://jypakwwtmsyvtk8u.public.blob.vercel-storage.com/brave-spark/videos/slot-8-video-by-brave_spark_-2-Er2FbTpJXqUyFT03aqU7B5da6MBXfN.mp4",
     "title": "B-roll"
+  },
+  {
+    "hidden": false,
+    "id": 7,
+    "order": 10,
+    "poster": "https://jypakwwtmsyvtk8u.public.blob.vercel-storage.com/brave-spark/posters/slot-7-1779570489583-Pu9aXaNeAmgHDNXyFsC8tvMUzActC7.jpg",
+    "src": "https://jypakwwtmsyvtk8u.public.blob.vercel-storage.com/brave-spark/videos/slot-7-video-by-brave_spark_-4-2p3wq1lVLMlOArOyKi5X0IudZlVwgM.mp4",
+    "title": "Talking head"
   },
   {
     "hidden": false,
