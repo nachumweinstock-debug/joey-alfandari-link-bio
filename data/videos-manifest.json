@@ -25,8 +25,16 @@
   },
   {
     "hidden": false,
-    "id": 12,
+    "id": 10,
     "order": 4,
+    "poster": "https://jypakwwtmsyvtk8u.public.blob.vercel-storage.com/brave-spark/posters/slot-10-1779570600640-6jDpyMQcOBg851rpoajSiD9d754AMO.jpg",
+    "src": "https://jypakwwtmsyvtk8u.public.blob.vercel-storage.com/brave-spark/videos/slot-10-154332-Ml4brHC5uCjDw3kfha5VKABpJsILkP.mp4",
+    "title": "Ninja warrior"
+  },
+  {
+    "hidden": false,
+    "id": 12,
+    "order": 5,
     "poster": "https://jypakwwtmsyvtk8u.public.blob.vercel-storage.com/brave-spark/posters/slot-12-1780110190792-vR9Ht8mvJXmsmIfAucwsqMFE3pBjOR.jpg",
     "src": "https://jypakwwtmsyvtk8u.public.blob.vercel-storage.com/brave-spark/videos/slot-12-154192-AmLxBYeujLna0XoMMnz4P0D3dcfQ4d.mp4",
     "title": "Divine drapes"
@@ -34,7 +42,7 @@
   {
     "hidden": false,
     "id": 6,
-    "order": 5,
+    "order": 6,
     "poster": "https://jypakwwtmsyvtk8u.public.blob.vercel-storage.com/brave-spark/posters/slot-6-1779653019215-3jUsgOtIFsmIgmFS6o8dwM1cDDY44k.jpg",
     "src": "",
     "title": "Unboxing"
@@ -42,7 +50,7 @@
   {
     "hidden": false,
     "id": 3,
-    "order": 6,
+    "order": 7,
     "poster": "https://jypakwwtmsyvtk8u.public.blob.vercel-storage.com/brave-spark/posters/slot-3-1779502533166-MCQCUOucllAI5HjEJcwLFyhJu33tqg.jpg",
     "src": "https://jypakwwtmsyvtk8u.public.blob.vercel-storage.com/brave-spark/videos/slot-3-whatsapp-video-2026-05-21-at-16.34.16-As7JjCUKvgbPoJUbvQMNr4eGLu66NK.mp4",
     "title": "Shirt in a cup"
@@ -50,7 +58,7 @@
   {
     "hidden": false,
     "id": 9,
-    "order": 7,
+    "order": 8,
     "poster": "https://jypakwwtmsyvtk8u.public.blob.vercel-storage.com/brave-spark/posters/slot-9-1779562967820-FJ3UnmgNSWKv6WGBMg4fnE4I2HfjmA.jpg",
     "src": "https://jypakwwtmsyvtk8u.public.blob.vercel-storage.com/brave-spark/videos/slot-9-154321-BQmHzgvaBFMsr5sgSstHOEcqHhiVux.mp4",
     "title": "Camping site"
@@ -58,18 +66,10 @@
   {
     "hidden": false,
     "id": 7,
-    "order": 8,
+    "order": 9,
     "poster": "https://jypakwwtmsyvtk8u.public.blob.vercel-storage.com/brave-spark/posters/slot-7-1779570489583-Pu9aXaNeAmgHDNXyFsC8tvMUzActC7.jpg",
     "src": "https://jypakwwtmsyvtk8u.public.blob.vercel-storage.com/brave-spark/videos/slot-7-video-by-brave_spark_-4-2p3wq1lVLMlOArOyKi5X0IudZlVwgM.mp4",
     "title": "Talking head"
-  },
-  {
-    "hidden": false,
-    "id": 10,
-    "order": 9,
-    "poster": "https://jypakwwtmsyvtk8u.public.blob.vercel-storage.com/brave-spark/posters/slot-10-1779570600640-6jDpyMQcOBg851rpoajSiD9d754AMO.jpg",
-    "src": "https://jypakwwtmsyvtk8u.public.blob.vercel-storage.com/brave-spark/videos/slot-10-154332-Ml4brHC5uCjDw3kfha5VKABpJsILkP.mp4",
-    "title": "Ninja warrior"
   },
   {
     "hidden": false,
