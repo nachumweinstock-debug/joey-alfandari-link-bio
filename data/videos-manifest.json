@@ -25,8 +25,16 @@
   },
   {
     "hidden": false,
-    "id": 6,
+    "id": 12,
     "order": 4,
+    "poster": "https://jypakwwtmsyvtk8u.public.blob.vercel-storage.com/brave-spark/posters/slot-12-1780110190792-vR9Ht8mvJXmsmIfAucwsqMFE3pBjOR.jpg",
+    "src": "https://jypakwwtmsyvtk8u.public.blob.vercel-storage.com/brave-spark/videos/slot-12-154192-AmLxBYeujLna0XoMMnz4P0D3dcfQ4d.mp4",
+    "title": "Divine drapes"
+  },
+  {
+    "hidden": false,
+    "id": 6,
+    "order": 5,
     "poster": "https://jypakwwtmsyvtk8u.public.blob.vercel-storage.com/brave-spark/posters/slot-6-1779653019215-3jUsgOtIFsmIgmFS6o8dwM1cDDY44k.jpg",
     "src": "",
     "title": "Unboxing"
@@ -34,7 +42,7 @@
   {
     "hidden": false,
     "id": 8,
-    "order": 5,
+    "order": 6,
     "poster": "",
     "src": "https://jypakwwtmsyvtk8u.public.blob.vercel-storage.com/brave-spark/videos/slot-8-video-by-brave_spark_-2-Er2FbTpJXqUyFT03aqU7B5da6MBXfN.mp4",
     "title": "B-roll"
@@ -42,18 +50,10 @@
   {
     "hidden": false,
     "id": 3,
-    "order": 6,
+    "order": 7,
     "poster": "https://jypakwwtmsyvtk8u.public.blob.vercel-storage.com/brave-spark/posters/slot-3-1779502533166-MCQCUOucllAI5HjEJcwLFyhJu33tqg.jpg",
     "src": "https://jypakwwtmsyvtk8u.public.blob.vercel-storage.com/brave-spark/videos/slot-3-whatsapp-video-2026-05-21-at-16.34.16-As7JjCUKvgbPoJUbvQMNr4eGLu66NK.mp4",
     "title": "Shirt in a cup"
-  },
-  {
-    "hidden": false,
-    "id": 12,
-    "order": 7,
-    "poster": "https://jypakwwtmsyvtk8u.public.blob.vercel-storage.com/brave-spark/posters/slot-12-1780110190792-vR9Ht8mvJXmsmIfAucwsqMFE3pBjOR.jpg",
-    "src": "https://jypakwwtmsyvtk8u.public.blob.vercel-storage.com/brave-spark/videos/slot-12-154192-AmLxBYeujLna0XoMMnz4P0D3dcfQ4d.mp4",
-    "title": "Divine drapes"
   },
   {
     "hidden": false,
