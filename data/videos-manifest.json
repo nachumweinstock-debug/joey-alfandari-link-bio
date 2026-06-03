@@ -89,18 +89,14 @@
   },
   {
     "hidden": false,
-    "id": 3,
-    "order": 12,
-    "poster": "https://jypakwwtmsyvtk8u.public.blob.vercel-storage.com/brave-spark/posters/slot-3-1779502533166-MCQCUOucllAI5HjEJcwLFyhJu33tqg.jpg",
-    "src": "https://jypakwwtmsyvtk8u.public.blob.vercel-storage.com/brave-spark/videos/slot-3-whatsapp-video-2026-05-21-at-16.34.16-As7JjCUKvgbPoJUbvQMNr4eGLu66NK.mp4",
-    "title": "Shirt in a cup"
-  },
-  {
-    "hidden": false,
     "id": 15,
     "order": 13,
     "poster": "",
     "src": "",
     "title": "New video 15"
+  },
+  {
+    "deleted": true,
+    "id": 3
   }
 ]
