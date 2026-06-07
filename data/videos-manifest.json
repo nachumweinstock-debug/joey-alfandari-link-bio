@@ -17,6 +17,14 @@
   },
   {
     "hidden": false,
+    "id": 3,
+    "order": 3,
+    "poster": "",
+    "src": "",
+    "title": "Real talk, sharp cut"
+  },
+  {
+    "hidden": false,
     "id": 5,
     "order": 3,
     "poster": "https://jypakwwtmsyvtk8u.public.blob.vercel-storage.com/brave-spark/posters/slot-5-1779502533167-7qJJNqTSyFHToOoEpSOfBZI6CH6xEn.jpg",
@@ -86,17 +94,5 @@
     "poster": "",
     "src": "",
     "title": "Autobrush"
-  },
-  {
-    "hidden": false,
-    "id": 15,
-    "order": 13,
-    "poster": "",
-    "src": "",
-    "title": "New video 15"
-  },
-  {
-    "deleted": true,
-    "id": 3
   }
 ]
